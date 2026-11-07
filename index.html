@@ -81,8 +81,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 /* tab bar */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
   padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.tabs-in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
-.tab{background:none;border:0;border-radius:8px;min-height:48px;font-size:13px;font-weight:500;color:var(--muted);position:relative}
+.tabs-in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.tab{background:none;border:0;border-radius:8px;min-height:48px;font-size:12px;padding:0 2px;white-space:nowrap;font-weight:500;color:var(--muted);position:relative}
 .tab[aria-current=page]{color:var(--accent);font-weight:700}
 .tab[aria-current=page]::before{content:"";position:absolute;top:-7px;left:25%;right:25%;height:3px;background:var(--accent);border-radius:0 0 3px 3px}
 
@@ -646,7 +646,7 @@ function speak(text,lang,rate){
 
 /* ---------- 화면 전환 ---------- */
 let view='today';
-const TABS=[['today','오늘'],['library','누적'],['add','문장 추가'],['settings','설정']];
+const TABS=[['today','오늘'],['history','지난 학습'],['library','누적'],['add','문장 추가'],['settings','설정']];
 function go(v){
   if(view==='practice'&&v!=='practice')cleanupPractice();
   view=v;render();window.scrollTo(0,0);
@@ -657,7 +657,7 @@ function render(){
   $('#tabs').hidden=inP;
   const tin=$('#tabs-in');tin.replaceChildren();
   TABS.forEach(t=>tin.append(h('button',{class:'tab',type:'button','aria-current':view===t[0]?'page':null,onclick:()=>go(t[0]),text:t[1]})));
-  const fn={today:viewToday,library:viewLibrary,add:viewAdd,settings:viewSettings,practice:viewPractice}[view];
+  const fn={today:viewToday,history:viewHistory,library:viewLibrary,add:viewAdd,settings:viewSettings,practice:viewPractice}[view];
   root.append(fn());
 }
 
@@ -671,6 +671,13 @@ function sentRow(id,isReview,day){
       done?h('div',{class:'sent sm',lang:s.lang,text:s.src}):h('div',{class:'hidden-text',text:'듣고 '+LN[other(s.lang)]+'로 통역 · 원문은 숨김'})),
     h('button',{class:'btn sm'+(done?' ghost':''),type:'button',onclick:()=>startPractice(id),text:done?'다시':'연습'}));
 }
+function rowsBox(ids,isReview,day){
+  const ok=ids.filter(i=>byId(i));
+  const todo=ok.filter(i=>!day.doneIds.includes(i)),dn=ok.filter(i=>day.doneIds.includes(i));
+  return h('div',null,todo.map(id=>sentRow(id,isReview,day)),
+    dn.length?h('details',{class:'donebox'},h('summary',{class:'help',style:'cursor:pointer;padding:8px 2px',text:'완료한 문장 '+dn.length+'개 보기'}),h('div',null,dn.map(id=>sentRow(id,isReview,day)))):null,
+    (!todo.length&&dn.length)?h('p',{class:'help',text:'모두 끝냈어요.'}):null);
+}
 function viewToday(){
   const day=ensureToday();
   const ids=day.reviewIds.concat(day.newIds).filter(i=>byId(i));
@@ -682,7 +689,7 @@ function viewToday(){
   root.append(h('div',{class:'top'},h('div',null,h('h1',{text:'Kotoba Daily'}),h('div',{class:'sub',text:fmtDate(new Date())+' · 한일 통역 연습'}))));
   root.append(h('div',{class:'stats'},
     h('div',null,h('b',{text:done+'/'+ids.length}),h('span',{text:'오늘'})),
-    h('div',null,h('b',{text:String(seen)}),h('span',{text:'누적 문장'})),
+    h('div',null,h('b',{text:String(ids.length-done)}),h('span',{text:'남은 문제'})),
     h('div',null,h('b',{text:String(streak())}),h('span',{text:'연속 일수'}))));
   root.append(h('div',{class:'bar'},h('span',{style:'width:'+(ids.length?Math.round(done/ids.length*100):0)+'%'})));
   if(!ids.length){
@@ -691,12 +698,14 @@ function viewToday(){
   }
   root.append(next?h('button',{class:'btn block',type:'button',onclick:()=>startPractice(next),text:done?'이어서 연습하기':'오늘 연습 시작'})
                   :h('div',{class:'card'},h('h2',{text:'오늘 연습을 모두 마쳤어요'}),h('p',{class:'sub',text:'내일은 오늘 문장을 먼저 복습하고, 새 문장이 이어집니다.'})));
+  const lists=h('div',{class:'stack',style:'gap:14px;margin-top:8px'});
   if(day.reviewIds.length){
-    root.append(h('div',null,h('div',{class:'section-h'},h('h3',{text:'어제 문장 복습'}),h('span',{class:'sub',text:day.reviewIds.filter(i=>day.doneIds.includes(i)).length+'/'+day.reviewIds.length})),
-      h('div',null,day.reviewIds.map(id=>sentRow(id,true,day)))));
+    lists.append(h('div',null,h('div',{class:'section-h'},h('h3',{text:'어제 문장 복습'}),h('span',{class:'sub',text:day.reviewIds.filter(i=>day.doneIds.includes(i)).length+'/'+day.reviewIds.length})),
+      rowsBox(day.reviewIds,true,day)));
   }
-  root.append(h('div',null,h('div',{class:'section-h'},h('h3',{text:'오늘의 새 문장'}),h('span',{class:'sub',text:day.newIds.filter(i=>day.doneIds.includes(i)).length+'/'+day.newIds.length})),
-    day.newIds.length?h('div',null,day.newIds.map(id=>sentRow(id,false,day))):h('p',{class:'sub',text:'남은 새 문장이 없어요. 문장 추가 탭에서 만들어 주세요.'})));
+  lists.append(h('div',null,h('div',{class:'section-h'},h('h3',{text:'오늘의 새 문장'}),h('span',{class:'sub',text:day.newIds.filter(i=>day.doneIds.includes(i)).length+'/'+day.newIds.length})),
+    day.newIds.length?rowsBox(day.newIds,false,day):h('p',{class:'sub',text:'남은 새 문장이 없어요. 문장 추가 탭에서 만들어 주세요.'})));
+  root.append(h('details',{class:'card todaybox'},h('summary',{style:'cursor:pointer;font-weight:700',text:'오늘 문제 목록 보기 ('+done+'/'+ids.length+')'}),lists));
   const sel0=(S.settings.topics||[]);
   root.append(h('p',{class:'help'},'새 문장 주제: '+(sel0.length?sel0.join(', '):'전체'),' ',h('a',{href:'#',onclick:e=>{e.preventDefault();go('settings');},text:'변경'})));
   if(day.note)root.append(h('p',{class:'help warn',text:day.note}));
@@ -1126,6 +1135,32 @@ function finishSentence(){
 
 /* ---------- 누적 ---------- */
 let libFilter='all',libQ='';
+function dayLabel(d){
+  const dt=new Date(d+'T00:00:00');
+  if(isNaN(dt))return d;
+  return (dt.getMonth()+1)+'월 '+dt.getDate()+'일 ('+['일','월','화','수','목','금','토'][dt.getDay()]+')';
+}
+function viewHistory(){
+  const root=h('div',{class:'stack'});
+  root.append(h('div',{class:'top'},h('div',null,h('h1',{text:'지난 학습'}),h('div',{class:'sub',text:'날짜별로 다시 보는 곳'}))));
+  const t=todayStr();
+  const ds=Object.keys(S.days).filter(d=>d<t).sort().reverse();
+  if(!ds.length){root.append(h('div',{class:'empty'},h('p',{text:'아직 지난 학습이 없어요.'}),h('p',{class:'sub',text:'오늘 연습을 하면 내일부터 여기에 날짜별로 쌓여요.'})));return root;}
+  ds.forEach((d,idx)=>{
+    const x=S.days[d];
+    const ids=[];(x.newIds||[]).concat(x.reviewIds||[]).forEach(i=>{if(byId(i)&&!ids.includes(i))ids.push(i);});
+    if(!ids.length)return;
+    const dn=ids.filter(i=>(x.doneIds||[]).includes(i)).length;
+    const body=h('div',{class:'stack',style:'gap:8px;margin-top:8px'});
+    let filled=false;
+    const det=h('details',{class:'card hday'},
+      h('summary',{style:'cursor:pointer'},h('b',{text:dayLabel(d)}),h('span',{class:'sub',text:'  완료 '+dn+'/'+ids.length})),body);
+    const fill=()=>{if(filled)return;filled=true;ids.forEach(i=>body.append(libItem(byId(i))));};
+    det.addEventListener('toggle',()=>{if(det.open)fill();});
+    root.append(det);
+  });
+  return root;
+}
 function viewLibrary(){
   const root=h('div',{class:'stack'});
   root.append(h('div',{class:'top'},h('div',null,h('h1',{text:'누적'}),h('div',{class:'sub',text:'지금까지 만난 문장과 기록'}))));
