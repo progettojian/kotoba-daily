@@ -913,6 +913,16 @@ function ensureToday(){
   if(lastFell)day.note='선택한 주제의 문장이 부족해 다른 주제 문장이 섞였어요.';
   S.days[t]=day;save();return day;
 }
+function redrawNew(){
+  const day=ensureToday();
+  const keep=day.newIds.filter(id=>{const p=S.progress[id];return (day.doneIds||[]).includes(id)||(p&&p.attempts&&p.attempts.length);});
+  const drop=day.newIds.filter(id=>!keep.includes(id));
+  if(!drop.length){toast('아직 풀지 않은 새 문장이 없어요');return;}
+  drop.forEach(id=>{if(S.progress[id])delete S.progress[id].introDay;});
+  const first=keep.length?other(byId(keep[keep.length-1]).lang):(lastNewLang()&&!keep.length?'ja':'ja');
+  const ids=pickNew(drop.length,keep.length?first:(Math.random()<.5?'ja':'ko'));
+  day.newIds=keep.concat(ids);save();toast('새 문장을 다시 뽑았어요');render();
+}
 function addOneNew(){
   const day=ensureToday();
   const last=day.newIds.length?byId(day.newIds[day.newIds.length-1]):null;
@@ -1027,6 +1037,7 @@ function viewToday(){
   const sel0=(S.settings.topics||[]);
   root.append(h('p',{class:'help'},'새 문장 주제: '+(sel0.length?sel0.join(', '):'전체'),' ',h('a',{href:'#',onclick:e=>{e.preventDefault();go('settings');},text:'변경'})));
   if(day.note)root.append(h('p',{class:'help warn',text:day.note}));
+  root.append(h('button',{class:'btn ghost sm',type:'button',onclick:redrawNew,text:'오늘 새 문장 다시 뽑기 (아직 안 푼 것만)'}));
   if(unseen>0){
     root.append(h('div',{class:'stack',style:'gap:8px'},
       h('button',{class:'btn ghost sm',type:'button',onclick:()=>addMoreNew(1),text:'새 문장 1개 더'}),
