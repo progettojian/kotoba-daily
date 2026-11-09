@@ -1786,6 +1786,7 @@ function viewSettings(){
   const st=S.settings;
   const root=h('div',{class:'stack'});
   root.append(h('div',{class:'top'},h('div',null,h('h1',{text:'설정'}),h('div',{class:'sub',text:'연습 방식과 데이터'}))));
+  root.append(h('p',{class:'help',text:'앱 버전 v7 · 예문 '+BANK.length+'개 · 첫 문장 무작위 · 새 문장 다시 뽑기'}));
   const sel=(id,label,val,opts,onch)=>{const s=h('select',{class:'field',id:id,onchange:()=>onch(s.value)},opts.map(o=>h('option',{value:String(o[0]),text:o[1],selected:String(o[0])===String(val)})));return h('label',{class:'lb',for:id},label,s);};
   root.append(h('div',{class:'card stack',style:'gap:14px'},
     h('h2',{text:'통역 연습'}),
