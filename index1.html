@@ -1,0 +1,1989 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow,noarchive"><style>html{color-scheme:light}body{margin:0}</style></head><body><title>Kotoba Daily</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&family=Noto+Serif+KR:wght@500;700&display=swap">
+<style>
+/* Layout concept: interpreter's top-bound note pad. Quiet paper ground, one teal ink,
+   language colors (JA vermilion / KO blue) used only on small chips, timer is the one loud element. */
+:root{
+  --bg:#F3F5F2;--surface:#FFFFFF;--surface2:#E8EDE9;--fg:#17262A;--muted:#566669;--line:#D2DAD5;
+  --accent:#0E6B63;--accent-fg:#FFFFFF;--accent-soft:#D4EAE5;
+  --ja:#A63428;--ja-soft:#F5DDD9;--ko:#2A5A99;--ko-soft:#DBE6F4;
+  --ok:#2B7A3E;--warn:#A9710F;--bad:#BE3B2D;--pen:#17262A;
+  --sans:'Noto Sans KR','Noto Sans JP',system-ui,-apple-system,'Apple SD Gothic Neo','Hiragino Sans',sans-serif;
+  --serif:'Noto Serif KR','Noto Serif JP','Apple SD Gothic Neo','Hiragino Mincho ProN',serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1A1C;--surface:#162427;--surface2:#1D2F32;--fg:#E6EFEC;--muted:#93A8A8;--line:#2A3E41;
+  --accent:#4FC4B3;--accent-fg:#06211E;--accent-soft:#17403C;
+  --ja:#F08A7D;--ja-soft:#3B1F1C;--ko:#8DB6EE;--ko-soft:#1B2D45;
+  --ok:#6FCB84;--warn:#E5B454;--bad:#F08A7D;--pen:#E6EFEC;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1A1C;--surface:#162427;--surface2:#1D2F32;--fg:#E6EFEC;--muted:#93A8A8;--line:#2A3E41;
+  --accent:#4FC4B3;--accent-fg:#06211E;--accent-soft:#17403C;
+  --ja:#F08A7D;--ja-soft:#3B1F1C;--ko:#8DB6EE;--ko-soft:#1B2D45;
+  --ok:#6FCB84;--warn:#E5B454;--bad:#F08A7D;--pen:#E6EFEC;color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:14px 104px;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto}
+.stack{display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--serif);font-size:26px;line-height:1.2;margin:0;font-weight:700;letter-spacing:-.01em}
+h2{font-size:15px;margin:0;font-weight:700}
+h3{font-size:13px;margin:0;font-weight:700;color:var(--muted);letter-spacing:.04em}
+p{margin:0}
+.sub{color:var(--muted);font-size:13px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding-top:4px}
+
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border-radius:10px;
+  border:1px solid var(--accent);background:var(--accent);color:var(--accent-fg);font-weight:700;font-size:15px}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.sm{min-height:38px;padding:0 14px;font-size:14px}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.45;cursor:default}
+.link{background:none;border:0;color:var(--accent);padding:8px 0;min-height:40px;font-weight:500}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card.plain{background:transparent;border:0;padding:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stats>div{padding:12px 4px;text-align:center}
+.stats>div+div{border-left:1px solid var(--line)}
+.stats b{display:block;font-family:var(--mono);font-size:22px;font-weight:500;line-height:1.2}
+.stats span{font-size:12px;color:var(--muted)}
+.bar{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.bar>span{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;letter-spacing:.02em}
+.chip.ja{background:var(--ja-soft);color:var(--ja)}
+.chip.ko{background:var(--ko-soft);color:var(--ko)}
+.tag{font-size:12px;color:var(--muted);padding:1px 0}
+.tag.ok{color:var(--ok);font-weight:700}
+.tag.warn{color:var(--warn);font-weight:700}
+
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row-main{min-width:0;flex:1}
+.meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.hidden-text{color:var(--muted);font-size:14px}
+.is-done .hidden-text{display:none}
+.sent{font-family:var(--serif);font-size:20px;line-height:1.65;overflow-wrap:anywhere}
+.sent.sm{font-size:16px;line-height:1.55}
+.sent[lang=ja]{font-family:'Noto Serif JP','Noto Serif KR','Hiragino Mincho ProN',serif}
+.sent[lang=ko]{font-family:'Noto Serif KR','Noto Serif JP','Apple SD Gothic Neo',serif}
+.section-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+
+/* tab bar */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.tabs-in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.tab{background:none;border:0;border-radius:8px;min-height:48px;font-size:12px;padding:0 2px;white-space:nowrap;font-weight:500;color:var(--muted);position:relative}
+.tab[aria-current=page]{color:var(--accent);font-weight:700}
+.tab[aria-current=page]::before{content:"";position:absolute;top:-7px;left:25%;right:25%;height:3px;background:var(--accent);border-radius:0 0 3px 3px}
+
+/* practice */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;list-style:none;padding:0;margin:0}
+.steps li{font-size:12px;text-align:center;padding:6px 0;border-bottom:3px solid var(--line);color:var(--muted)}
+.steps li.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+.steps li.done{border-color:var(--accent);opacity:.55}
+.pbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pbar .meta{margin:0}
+.listen{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
+.play{width:78px;height:78px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center}
+.play[aria-busy=true]{background:var(--accent-soft);color:var(--accent)}
+.play svg,.mic svg{width:32px;height:32px}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap}
+.timer{position:relative;width:118px;height:118px;flex:none}
+.timer svg{width:100%;height:100%;transform:rotate(-90deg)}
+.timer circle{fill:none;stroke-width:9}
+.timer .trk{stroke:var(--surface2)}
+.timer .arc{stroke:var(--ok);stroke-linecap:round;transition:stroke .2s}
+.timer.warn .arc{stroke:var(--warn)}.timer.bad .arc{stroke:var(--bad)}.timer.idle .arc{stroke:var(--line)}
+.timer .tv{position:absolute;inset:0;display:grid;place-content:center;text-align:center;font-family:var(--mono);font-size:30px;font-weight:500;line-height:1}
+.timer .tv small{display:block;font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--sans)}
+.timer.bad .tv{color:var(--bad)}
+.hint{margin-top:12px;padding:12px;border-radius:8px;background:var(--surface2)}
+.pad{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.pad-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 8px 6px 12px;border-bottom:1px solid var(--line);gap:8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:0 12px;min-height:34px;font-size:13px;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-fg);font-weight:700}
+.sheet{position:relative;height:176px;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,var(--line) 27px,var(--line) 28px)}
+.sheet::before{content:"";position:absolute;top:0;bottom:0;left:34%;width:1px;background:var(--accent);opacity:.45;pointer-events:none}
+.sheet canvas,.sheet textarea{position:absolute;inset:0;width:100%;height:100%;display:block}
+.sheet canvas{touch-action:none}
+.sheet textarea{border:0;background:transparent;resize:none;padding:0 10px;line-height:28px;font:16px/28px var(--sans);color:var(--fg)}
+.speak{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.speak-top{display:flex;align-items:center;gap:16px}
+.mic{width:84px;height:84px;flex:none;border-radius:50%;border:0;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center}
+.mic.rec{background:var(--bad);color:#fff;animation:pulse 1.3s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(190,59,45,.4)}50%{box-shadow:0 0 0 12px rgba(190,59,45,0)}}
+@media (prefers-reduced-motion:reduce){.mic.rec{animation:none}.bar>span,.timer .arc{transition:none}}
+.status{font-size:14px}
+.help{font-size:13px;color:var(--muted)}
+.help.warn{color:var(--warn)}
+textarea.field,input.field,select.field{width:100%;font:16px/1.55 var(--sans);color:var(--fg);background:var(--surface);
+  border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+textarea.field{min-height:84px;resize:vertical}
+select.field{min-height:44px}
+audio{width:100%;height:40px}
+.cmp{display:flex;flex-direction:column;gap:14px}
+.cmp-block{display:flex;flex-direction:column;gap:6px}
+.cmp-block .lab{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cmp-block.mine .sent{color:var(--fg)}
+.cmp-block.model{padding:14px;border-radius:10px;background:var(--accent-soft)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:13px;padding:3px 10px;border-radius:99px;border:1px solid var(--line)}
+.pill.hit{border-color:var(--ok);color:var(--ok)}
+.pill.miss{border-color:var(--bad);color:var(--bad)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+.kv dt{font-weight:700}.kv dd{margin:0;color:var(--muted)}
+.key{display:flex;flex-direction:column;gap:6px}
+.key b{font-family:var(--serif);font-size:16px;margin-right:6px}
+.eval{display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center;font-size:14px}
+.chk{display:flex;gap:10px;align-items:center;font-size:14px}
+.chk input{width:20px;height:20px;accent-color:var(--accent)}
+.foot{display:flex;gap:10px;flex-wrap:wrap}
+.foot .btn{flex:1;min-width:140px}
+
+/* library */
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.fbtn{min-height:36px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:transparent;font-size:13px}
+.fbtn[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:700}
+.strip{display:grid;grid-template-columns:repeat(14,1fr);gap:4px}
+.strip i{display:block;aspect-ratio:1;border-radius:4px;background:var(--surface2)}
+.strip i.l1{background:var(--accent-soft)}
+.strip i.l2{background:var(--accent);opacity:.6}
+.strip i.l3{background:var(--accent)}
+details.lib{border-bottom:1px solid var(--line)}
+details.lib summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px 0;min-height:48px}
+details.lib summary::-webkit-details-marker{display:none}
+details.lib[open] summary{padding-bottom:8px}
+.lib-body{display:flex;flex-direction:column;gap:12px;padding:0 0 16px}
+.att{font-size:13px;color:var(--muted)}
+.att div{padding:2px 0}
+
+.empty{padding:28px 16px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:30;
+  max-width:min(92vw,520px);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;text-align:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}.listen{grid-template-columns:1fr;justify-items:start}}
+label.lb{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:var(--muted)}
+label.lb .field{font-weight:400}
+.diag{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px}
+.diag b.ok{color:var(--ok)}.diag b.no{color:var(--bad)}
+pre.out{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;margin:0}
+.step{display:flex;gap:12px;align-items:flex-start}
+.num{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none;margin-top:1px}
+.gram{display:flex;flex-direction:column;gap:14px}
+.gram b{display:block;font-size:15px;margin-bottom:2px}
+.gram p{color:var(--muted);font-size:14px}
+.ai-out{white-space:pre-wrap;overflow-wrap:anywhere;padding:14px;border-radius:10px;background:var(--surface2);font-size:14px;line-height:1.7}
+.dx{font-weight:700;text-decoration:underline wavy var(--warn);text-decoration-thickness:1.5px;text-underline-offset:5px}
+details>summary{min-height:32px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tchip{font:inherit;font-size:13px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;color:inherit;cursor:pointer;min-height:36px}
+.tchip.on{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+</style>
+
+<div id="app" class="wrap"></div>
+<nav id="tabs" class="tabs" aria-label="주요 메뉴"><div class="tabs-in" id="tabs-in"></div></nav>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- 문장 은행 (일→한 / 한→일 번갈아) ---------- */
+/* key:[표현,설명]  must:[라벨,[정답에 들어가면 좋은 표현...]]  */
+const BANK=[
+{id:'b01',lang:'ja',src:'来週の水曜日までに、見積書をいただけますでしょうか。',ref:'다음 주 수요일까지 견적서를 보내 주실 수 있을까요?',
+ key:[['〜までに','기한을 나타냅니다. 계속을 뜻하는 「まで」와 구분하세요. “수요일까지(그 안에)”'],['いただけますでしょうか','「いただけますか」보다 한 단계 더 공손한 의뢰']],
+ nuance:'일본어는 의뢰를 질문형으로 부드럽게 말합니다. 한국어도 “보내 주세요”보다 “보내 주실 수 있을까요?”로 옮겨야 톤이 맞습니다.',
+ yomi:'来週(らいしゅう) 水曜日(すいようび) 見積書(みつもりしょ)',
+ must:[['다음 주 수요일',['다음 주 수요일','다음주 수요일']],['견적서',['견적']],['기한(까지)',['까지']]]},
+{id:'b02',lang:'ko',src:'공사 일정이 이틀 정도 늦어질 것 같습니다.',ref:'工事のスケジュールが二日ほど遅れそうです。',
+ key:[['〜そうです','눈앞의 상황에서 본 전망(様態). “늦어질 것 같다”'],['二日ほど','「ほど」로 대략의 수량을 완곡하게 표현']],
+ nuance:'본사·상사 보고라면 「遅れる見込みです」가 더 비즈니스다운 표현입니다.',
+ yomi:'工事(こうじ) 二日(ふつか) 遅(おく)れそうです',
+ must:[['공사',['工事']],['이틀',['二日','2日','ふつか']],['지연',['遅']]]},
+{id:'b03',lang:'ja',src:'納期については、改めてご連絡いたします。',ref:'납기에 대해서는 다시 연락드리겠습니다.',
+ key:[['改めて','“다시 정식으로, 정리된 뒤에”. 단순한 「また」와 다릅니다'],['ご連絡いたします','겸양 표현. 한국어는 “연락드리겠습니다”']],
+ nuance:'「改めて」는 “지금은 확답이 없고 추후 정식 연락”이라는 뉘앙스입니다. “다시”만 쓰면 가볍게 들릴 수 있어요.',
+ yomi:'納期(のうき) 改(あらた)めて 連絡(れんらく)',
+ must:[['납기',['납기','납품 기한','납품기한']],['다시/추후',['다시','추후','나중에','별도로']],['연락',['연락']]]},
+{id:'b04',lang:'ko',src:'죄송하지만 오늘 중으로 확인 부탁드립니다.',ref:'恐れ入りますが、本日中にご確認をお願いいたします。',
+ key:[['恐れ入りますが','의뢰 앞에 붙이는 쿠션 표현. 의뢰에는 「申し訳ありませんが」보다 자연스럽습니다'],['本日中に','“오늘 안으로” 마감. 「今日中」보다 격식 있음']],
+ nuance:'“죄송하지만”을 「すみませんが」로 옮기면 가볍습니다. 사과가 아니라 쿠션 표현으로 처리하세요.',
+ yomi:'恐(おそ)れ入(い)りますが 本日中(ほんじつちゅう) 確認(かくにん)',
+ must:[['오늘 중',['本日中','今日中','本日']],['확인',['確認']],['부탁',['お願い']]]},
+{id:'b05',lang:'ja',src:'現時点では、まだ確定しておりません。',ref:'현 시점에서는 아직 확정되지 않았습니다.',
+ key:[['現時点では','“지금 시점에서는”. 나중에 바뀔 수 있다는 여지'],['おりません','「いません」의 겸양. 한국어는 정중체로 충분']],
+ nuance:'“모릅니다”가 아니라 “아직 정해지지 않았다”입니다. 확정 여부를 분명히 전달하세요.',
+ yomi:'現時点(げんじてん) 確定(かくてい)',
+ must:[['현 시점',['현 시점','현재','지금']],['아직',['아직']],['확정',['확정']]]},
+{id:'b06',lang:'ko',src:'저희 쪽에서 먼저 확인해 보고 말씀드리겠습니다.',ref:'こちらでまず確認してから、ご連絡いたします。',
+ key:[['こちら','“저희 쪽”. 사외 상대에게는 「弊社」도 가능'],['確認してから','“확인한 뒤에”. 순서를 분명히']],
+ nuance:'“말씀드리겠습니다”를 「お話しします」로 옮기면 어색합니다. 업무에서는 「ご連絡」「ご報告」가 자연스럽습니다. 언제까지 답할지 덧붙이면 신뢰를 줍니다.',
+ yomi:'確認(かくにん) 連絡(れんらく)',
+ must:[['저희 쪽',['こちら','弊社','当社','私ども']],['확인',['確認']],['연락/보고',['連絡','報告','お伝え']]]},
+{id:'b07',lang:'ja',src:'ご迷惑をおかけして、大変申し訳ございません。',ref:'불편을 끼쳐 드려 대단히 죄송합니다.',
+ key:[['ご迷惑をおかけして','“폐를 끼쳐서”. 한국어는 “불편을 드려서”가 자연스러운 경우가 많음'],['申し訳ございません','「すみません」「申し訳ありません」보다 격식이 높음']],
+ nuance:'“폐를 끼쳐서”를 직역하면 무겁게 들릴 수 있어 상황에 따라 “불편을 드려서”로 조정합니다.',
+ yomi:'迷惑(めいわく) 大変(たいへん) 申(もう)し訳(わけ)ございません',
+ must:[['불편/폐',['불편','폐']],['죄송',['죄송','사과']]]},
+{id:'b08',lang:'ko',src:'이번 주 금요일 오후에 점포 확인이 가능하십니까?',ref:'今週の金曜日の午後、店舗の確認のご都合はいかがでしょうか。',
+ key:[['ご都合はいかがでしょうか','“시간 괜찮으신가요”. 「可能ですか」보다 부드러움'],['店舗','가게·점포. 업무에서는 「お店」보다 「店舗」']],
+ nuance:'“가능하십니까?”를 「可能ですか」로 옮기면 딱딱하고 사무적입니다. 상대 사정을 묻는 「ご都合」가 일본 비즈니스에서 자연스럽습니다.',
+ yomi:'今週(こんしゅう) 金曜日(きんようび) 午後(ごご) 店舗(てんぽ) 都合(つごう)',
+ must:[['이번 주',['今週']],['금요일',['金曜']],['오후',['午後']],['점포',['店舗','お店']]]},
+{id:'b09',lang:'ja',src:'オープンまでに、スタッフ全員の研修を終える予定です。',ref:'오픈 전까지 직원 전원의 교육을 마칠 예정입니다.',
+ key:[['全員','“전원”. “모두”보다 격식'],['研修','한국 현장에서는 “교육”이 일반적']],
+ nuance:'「研修」를 “연수”로 옮기면 거창하게 들릴 수 있습니다. 매장 운영 맥락에서는 “교육”이 자연스럽습니다.',
+ yomi:'研修(けんしゅう) 全員(ぜんいん) 予定(よてい)',
+ must:[['오픈',['오픈','개점','개업']],['직원',['직원','스태프']],['교육',['교육','연수']],['예정',['예정']]]},
+{id:'b10',lang:'ko',src:'비용이 예상보다 조금 더 들 것 같습니다.',ref:'費用が想定より少しかかりそうです。',
+ key:[['想定より','“예상보다”. 비즈니스에서는 「予想」보다 「想定」'],['かかる','비용·시간이 “든다”. 「高くなる」와 뉘앙스가 다름']],
+ nuance:'“비싸진다”가 아니라 “더 든다”입니다. 금액 협의 전에는 단정하지 않는 완곡한 톤을 유지하세요.',
+ yomi:'費用(ひよう) 想定(そうてい) 少(すこ)し',
+ must:[['비용',['費用','コスト']],['예상보다',['想定','予想','見込み']],['든다(かかる)',['かか']]]},
+{id:'b11',lang:'ja',src:'その点につきましては、社内で検討させていただきます。',ref:'그 부분에 대해서는 사내에서 검토해 보겠습니다.',
+ key:[['〜につきましては','「〜については」의 공손한 형태'],['検討させていただきます','“검토하겠다”. 거절의 완곡 표현일 수 있음']],
+ nuance:'일본 비즈니스에서 「検討します」는 긍정이 아닌 경우도 많습니다. 그대로 옮기되, 결정 시기를 확인하는 질문을 덧붙이면 안전합니다.',
+ yomi:'社内(しゃない) 検討(けんとう)',
+ must:[['그 부분',['그 부분','그 점','그 건']],['검토',['검토']],['사내',['사내','내부','회사 안']]]},
+{id:'b12',lang:'ko',src:'일정이 겹쳐서 이번에는 어렵습니다.',ref:'日程が重なっておりまして、今回は難しい状況です。',
+ key:[['〜おりまして','이유를 부드럽게 잇는 표현(「〜ておりまして」)'],['難しい状況です','「できません」보다 완곡한 거절']],
+ nuance:'“어렵습니다”는 한국어에서 이미 완곡하지만, 일본어의 「できません」은 매우 직설적입니다. 「難しい状況」「厳しい」로 톤을 맞춥니다.',
+ yomi:'日程(にってい) 重(かさ)なって 今回(こんかい) 難(むずか)しい',
+ must:[['일정',['日程','スケジュール','予定']],['겹침',['重']],['어려움',['難しい','厳しい']]]},
+{id:'b13',lang:'ja',src:'納品の際に、数量をご確認ください。',ref:'납품하실 때 수량을 확인해 주십시오.',
+ key:[['〜の際に','“~할 때”의 격식 표현'],['ご確認ください','정중한 요청. “확인해 주십시오”']],
+ nuance:'일본어 「ください」는 일반적인 요청이지만, 한국어 “주십시오”는 다소 강하게 들릴 수 있어 상황에 따라 “확인 부탁드립니다”도 가능합니다.',
+ yomi:'納品(のうひん) 際(さい) 数量(すうりょう)',
+ must:[['납품',['납품']],['수량',['수량']],['확인',['확인']]]},
+{id:'b14',lang:'ko',src:'메뉴 가격은 세금 포함으로 표기하고 있습니다.',ref:'メニューの価格は税込みで表示しております。',
+ key:[['税込み','세금 포함. 일본 가격 표기 용어(↔ 税別)'],['表示しております','“표시하고 있습니다”의 겸양']],
+ nuance:'한국의 “부가세 포함”은 일본에서 「税込み」로 통합니다. 「税別」와 혼동하지 않도록 주의하세요.',
+ yomi:'価格(かかく) 税込(ぜいこ)み 表示(ひょうじ)',
+ must:[['메뉴',['メニュー']],['가격',['価格','値段']],['세금 포함',['税込']]]},
+{id:'b15',lang:'ja',src:'アレルギーのあるお客様は、事前にお知らせください。',ref:'알레르기가 있으신 고객님께서는 미리 알려 주십시오.',
+ key:[['お客様は','주어는 고객. “고객께서는”'],['事前に','“사전에/미리”']],
+ nuance:'「お客様」는 “고객님”으로 옮기면 자연스럽습니다. 안내문 톤이라 정중체를 유지합니다.',
+ yomi:'事前(じぜん) 知(し)らせ',
+ must:[['알레르기',['알레르기']],['고객',['고객','손님']],['미리',['미리','사전']],['알림',['알려','알리']]]},
+{id:'b16',lang:'ko',src:'설비 점검 때문에 영업 시작이 30분 늦어집니다.',ref:'設備点検のため、営業開始が三十分遅れます。',
+ key:[['〜のため','이유(격식). 「〜ので」보다 공지·보고에 적합'],['営業開始','영업 시작']],
+ nuance:'숫자 “30분”은 「三十分(さんじゅっぷん)」입니다. 「ふん/ぷん」 발음 변화에 주의하세요.',
+ yomi:'設備(せつび) 点検(てんけん) 営業開始(えいぎょうかいし) 三十分(さんじゅっぷん)',
+ must:[['설비',['設備']],['점검',['点検']],['30분',['三十分','30分','さんじゅっぷん']],['지연',['遅']]]},
+{id:'b17',lang:'ja',src:'今月の売上は、前年同月比で約一割増えました。',ref:'이번 달 매출은 전년 동월 대비 약 10% 늘었습니다.',
+ key:[['前年同月比','“전년 동월 대비”'],['一割','“1할” = 10%. 二割는 20%']],
+ nuance:'「割」는 10% 단위입니다. 「一割」=10%, 「三割」=30%. 숫자 환산 실수가 많은 부분이에요.',
+ yomi:'今月(こんげつ) 売上(うりあげ) 前年同月比(ぜんねんどうげつひ) 一割(いちわり)',
+ must:[['이번 달',['이번 달','이번달','금월']],['매출',['매출']],['전년 동월 대비',['전년 동월','작년 같은 달','전년 대비']],['10%',['10%','10퍼센트','십 퍼센트','1할','일 할']]]},
+{id:'b18',lang:'ko',src:'원인을 확인한 후에 대책을 보고드리겠습니다.',ref:'原因を確認したうえで、対策をご報告いたします。',
+ key:[['〜したうえで','“~한 다음, 그것을 토대로”. 「〜してから」보다 신중한 톤'],['ご報告いたします','상사·본사에 대한 보고. 겸양']],
+ nuance:'“보고드리겠습니다”는 「報告します」보다 「ご報告いたします」로 옮겨 상하 관계를 맞춥니다.',
+ yomi:'原因(げんいん) 確認(かくにん) 対策(たいさく) 報告(ほうこく)',
+ must:[['원인',['原因']],['확인',['確認']],['대책',['対策']],['보고',['報告']]]},
+{id:'b19',lang:'ja',src:'こちらの商品は、在庫がなくなり次第、終了となります。',ref:'이 상품은 재고가 소진되는 대로 종료됩니다.',
+ key:[['〜次第','“~하는 대로”. 즉시 발생'],['〜となります','결과·상태를 정중하게 안내하는 표현']],
+ nuance:'「次第」는 “재고 소진 즉시 종료”입니다. “~하면”으로 옮기면 즉시성이 약해집니다.',
+ yomi:'商品(しょうひん) 在庫(ざいこ) 次第(しだい) 終了(しゅうりょう)',
+ must:[['상품',['상품','제품']],['재고',['재고']],['소진/없어짐',['소진','떨어','없어','다 되']],['종료',['종료','끝나','마감']]]},
+{id:'b20',lang:'ko',src:'추가 비용이 발생하는 경우에는 사전에 협의하겠습니다.',ref:'追加費用が発生する場合は、事前にご相談いたします。',
+ key:[['発生する場合は','“발생하는 경우에는”'],['ご相談','“협의”는 「協議」보다 「ご相談」가 부드러움']],
+ nuance:'계약 조건 맥락에서는 「協議」도 쓰지만, 고객 응대에서는 「ご相談」가 자연스럽습니다. 비용 발언은 책임이 모호해지지 않도록 “사전에”를 꼭 살립니다.',
+ yomi:'追加費用(ついかひよう) 発生(はっせい) 事前(じぜん) 相談(そうだん)',
+ must:[['추가 비용',['追加費用','追加']],['발생',['発生']],['사전에',['事前']],['협의',['相談','協議']]]},
+{id:'b21',lang:'ja',src:'念のため、もう一度ご確認いただけますか。',ref:'혹시 모르니 한 번 더 확인해 주시겠습니까?',
+ key:[['念のため','“만일을 위해”. 상대를 의심하는 게 아니라 쿠션'],['もう一度','“한 번 더”']],
+ nuance:'“혹시 모르니”로 옮기면 의심처럼 들릴 수 있어, 한국어에서는 “확인 차”나 “다시 한번 부탁드립니다”가 부드럽습니다.',
+ yomi:'念(ねん)のため 一度(いちど) 確認(かくにん)',
+ must:[['혹시/만약',['혹시','만약','확인 차','만일']],['한 번 더',['한 번 더','한번 더','다시']],['확인',['확인']]]},
+{id:'b22',lang:'ko',src:'내일 오전 중에 담당자가 방문할 예정입니다.',ref:'明日の午前中に、担当者が伺う予定です。',
+ key:[['伺う','자기 쪽이 방문한다는 겸양. 상대가 오면 「いらっしゃる」'],['午前中に','“오전 중에”']],
+ nuance:'누가 방문하는지가 핵심입니다. 우리 쪽 담당자가 상대에게 가면 「伺う」, 상대가 오면 「お越しになる」.',
+ yomi:'明日(あした) 午前中(ごぜんちゅう) 担当者(たんとうしゃ) 伺(うかが)う',
+ must:[['내일',['明日']],['오전',['午前']],['담당자',['担当']],['방문',['伺','訪問','お邪魔']]]},
+{id:'b23',lang:'ja',src:'できる限り、ご希望に沿えるよう努めます。',ref:'최대한 요청하신 사항에 맞추도록 노력하겠습니다.',
+ key:[['できる限り','“가능한 한, 최대한”'],['〜に沿う','“~에 부합하다”']],
+ nuance:'「努めます」는 약속이 아니라 노력 표명입니다. “해 드리겠습니다”로 단정해 옮기지 마세요.',
+ yomi:'希望(きぼう) 沿(そ)えるよう 努(つと)めます',
+ must:[['최대한',['최대한','가능한 한','가능한한']],['요청/희망',['요청','희망','요구']],['노력',['노력']]]},
+{id:'b24',lang:'ko',src:'오늘 회의에서 결정된 내용을 공유드립니다.',ref:'本日の会議で決まった内容を共有いたします。',
+ key:[['決まった内容','“결정된 내용”. 「決定」보다 구어적'],['共有いたします','“공유드립니다”. 겸양']],
+ nuance:'“공유드립니다”는 「共有いたします」와 거의 1:1 대응합니다. 「共有させていただきます」는 지나치게 낮추는 느낌이 날 수 있습니다.',
+ yomi:'本日(ほんじつ) 会議(かいぎ) 決(き)まった 共有(きょうゆう)',
+ must:[['오늘',['本日','今日']],['회의',['会議','ミーティング']],['결정',['決']],['공유',['共有']]]},
+{id:'b25',lang:'ja',topic:'인사·자기소개',src:'はじめまして。韓国法人で営業を担当しております、キムと申します。',ref:'처음 뵙겠습니다. 한국 법인에서 영업을 담당하고 있는 김이라고 합니다.',
+ key:[['〜と申します','자기소개의 정형 표현. 「言う」의 겸양어'],['担当しております','맡은 일을 중심으로 소개할 때 자연스러운 겸양']],
+ gram:[['〜と申します','「言う」의 겸양어가 「申す」입니다. 자기소개의 정형이고, 상대의 이름을 말할 때는 「〜とおっしゃる」를 씁니다.'],['〜を担当しております','「担当する」에 「ている」의 겸양형이 붙었습니다. 직함보다 맡은 업무 중심으로 소개하는 일본식 방식입니다.']],
+ nuance:'일본어 소개는 소속, 담당, 이름 순서로 말합니다. 한국어의 “~라고 합니다”는 「〜と申します」에 대응하고, 이름 뒤에 직함을 붙이지 않는 것이 자연스럽습니다.',
+ yomi:'韓国法人(かんこくほうじん) 営業(えいぎょう) 担当(たんとう) 申(もう)します',
+ must:[['처음 뵙겠습니다',['처음뵙','처음 뵙']],['한국 법인',['한국법인','한국 법인']],['영업',['영업']],['담당',['담당']]]},
+{id:'b26',lang:'ko',topic:'승인·의사결정 요청',src:'이 건에 대해 부장님의 승인을 받고 싶습니다.',ref:'この件につきまして、部長のご承認をいただきたく存じます。',
+ key:[['〜いただきたく存じます','의뢰·희망을 정중하게 말하는 문어체'],['ご承認','상대의 행위에는 「ご」를 붙여 높임']],
+ gram:[['〜たく存じます','「〜たいと思います」의 격식 있는 문어체 겸양입니다. 메일과 보고서에서 의뢰나 희망을 정중히 말할 때 씁니다.'],['ご+한자어(상대의 행위)','「ご承認」처럼 상대의 행위를 나타내는 한자어에는 「ご」를 붙여 높입니다. 내 행위에는 겸양 패턴을 씁니다.']],
+ nuance:'한국어의 “부장님”은 일본어에서 「部長」로 말하는 것이 일반적입니다. 직함 자체가 존칭이라 「部長様」「部長さん」은 붙이지 않는 것이 보통입니다.',
+ yomi:'部長(ぶちょう) 承認(しょうにん) 存(ぞん)じます',
+ must:[['이 건',['この件']],['부장',['部長']],['승인',['承認']],['받고 싶다(요청)',['いただき','お願い']]]},
+{id:'b27',lang:'ja',topic:'발주·결제·청구',src:'請求書は、月末締め翌月末払いでお願いしております。',ref:'청구서는 월말 마감, 다음 달 말 지급으로 부탁드리고 있습니다.',
+ key:[['月末締め翌月末払い','마감일과 지급일을 함께 말하는 거래 조건의 표준 표현'],['お願いしております','정해 둔 방침을 정중하게 전달']],
+ gram:[['締め와 払い','「月末締め翌月末払い」는 대금 거래의 표준 표기입니다. 締め는 마감일, 払い는 지급일입니다. 한국어로는 “월말 마감, 익월 말 지급”입니다.'],['お願いしております','“지금 그렇게 요청하고 있다”는 상태를 말합니다. 방침이나 규칙을 정중하게 전달할 때 씁니다.']],
+ nuance:'일본에서는 마감일과 지급일을 한 덩어리로 말하는 것이 관례입니다. 한국어의 “말일 정산”처럼 한 단어로 옮기지 말고 두 시점을 모두 살리세요.',
+ yomi:'請求書(せいきゅうしょ) 月末締(げつまつじ)め 翌月末払(よくげつまつばら)い',
+ must:[['청구서',['청구서']],['월말',['월말']],['다음 달',['다음 달','다음달','익월']],['지급',['지급']]]},
+{id:'b28',lang:'ko',topic:'업무 보고·진척',src:'프로젝트는 계획대로 진행되고 있으며, 다음 주에 중간 보고를 드리겠습니다.',ref:'プロジェクトは計画どおり進んでおり、来週、中間報告をいたします。',
+ key:[['計画どおり','“계획대로”. 보고 문서에서 많이 쓰는 표현'],['中間報告','“중간 보고”']],
+ gram:[['〜どおり','명사에 붙어 “~대로”가 됩니다. 「計画どおり」「予定どおり」. 문서에서는 かな 표기 どおり가 일반적입니다.'],['進んでおり(중지법)','「進んでおります」의 연결형입니다. 문장을 끊지 않고 「〜ており、〜」로 이어 보고합니다.']],
+ nuance:'“보고드리겠습니다”는 보통 「ご報告いたします」이지만, 「中間報告」처럼 명사 자체가 보고인 경우에는 「中間報告をいたします」가 자연스럽습니다.',
+ yomi:'計画(けいかく) 進(すす)んで 来週(らいしゅう) 中間報告(ちゅうかんほうこく)',
+ must:[['프로젝트',['プロジェクト']],['계획대로',['計画どおり','計画通り']],['다음 주',['来週']],['중간 보고',['中間報告']]]},
+{id:'b29',lang:'ja',topic:'채용·면접',src:'本日は面接のお時間をいただき、ありがとうございます。',ref:'오늘 면접 시간을 내 주셔서 감사합니다.',
+ key:[['お時間をいただき','상대의 시간을 받는다는 겸양'],['本日は','“오늘은”. 격식 있는 시작 인사']],
+ gram:[['お時間をいただく','상대의 시간을 “받는다”는 겸양 표현입니다. 한국어는 “시간을 내 주시다”처럼 시점을 바꿔 옮깁니다.'],['ありがとうございます와 ありがとうございました','현재의 감사에는 「ありがとうございます」를 쓰고, 이미 끝난 일에는 「ありがとうございました」를 씁니다.']],
+ nuance:'면접 시작 인사로 쓰입니다. 한국어는 “바쁘신 중에”를 덧붙이는 경우가 많지만, 일본어 원문에 없으면 덧붙이지 않아도 충분합니다.',
+ yomi:'本日(ほんじつ) 面接(めんせつ) 時間(じかん)',
+ must:[['오늘',['오늘']],['면접',['면접']],['시간',['시간']],['감사',['감사','고맙']]]},
+{id:'b30',lang:'ko',topic:'회의 진행·공유',src:'시간이 한정되어 있으니 안건을 세 가지로 좁혀서 진행하겠습니다.',ref:'時間に限りがありますので、議題を三つに絞って進めさせていただきます。',
+ key:[['時間に限りがある','“시간에 한계가 있다”'],['議題を絞る','“안건을 좁히다”']],
+ gram:[['〜ので(정중한 이유)','「ありますので」의 「ので」는 객관적인 이유를 나타냅니다. 「から」보다 부드러워 공식 석상에 적합합니다.'],['〜に絞る','「議題を三つに絞る」처럼 결과가 되는 수량이나 범위에 「に」를 씁니다. “~로 좁히다”.']],
+ nuance:'진행자가 양해를 구하며 말하는 상황이라 「進めさせていただきます」가 회의에서는 자연스럽습니다. 단순 통지가 아니라 참석자의 양해를 구하는 뉘앙스입니다.',
+ yomi:'時間(じかん) 限(かぎ)り 議題(ぎだい) 三(みっ)つ 絞(しぼ)って 進(すす)めさせていただきます',
+ must:[['시간',['時間']],['한정',['限り','限られ']],['안건',['議題']],['세 가지',['三つ','3つ']],['좁힘',['絞']]]},
+{id:'b31',lang:'ja',topic:'접대·식사 자리',src:'ささやかですが、お食事の席をご用意いたしました。',ref:'변변치 않지만 식사 자리를 마련했습니다.',
+ key:[['ささやかですが','자기 쪽 대접을 낮추는 겸손 쿠션'],['ご用意いたしました','상대를 위해 준비했다는 겸양']],
+ gram:[['ささやかですが(겸손 쿠션)','「ささやか」는 “소박하다”입니다. 자기 쪽 대접을 낮춰 상대를 높이는 쿠션 표현으로, 한국어의 “변변치 않지만”에 해당합니다.'],['ご+한자어+いたしました','「用意」를 「ご用意いたしました」로 만드는 겸양 패턴입니다. 상대를 위해 한 일에 씁니다.']],
+ nuance:'일본의 겸손 표현은 상대를 높이기 위한 것입니다. “소박하다”를 그대로 옮기면 어색하니 “변변치 않지만”처럼 한국어의 겸손 표현으로 바꾸세요.',
+ yomi:'食事(しょくじ) 席(せき) 用意(ようい)',
+ must:[['변변치 않지만',['변변','소박','보잘']],['식사',['식사']],['자리',['자리']],['마련/준비',['마련','준비']]]},
+{id:'b32',lang:'ko',topic:'전화·이메일 응대',src:'죄송합니다만, 담당자가 자리를 비웠습니다. 돌아오는 대로 연락드리겠습니다.',ref:'申し訳ございません、担当の者はただいま席を外しております。戻り次第、折り返しご連絡いたします。',
+ key:[['席を外しております','“자리를 비웠다”. 전화 응대의 정형 표현'],['折り返し','“되돌려서(바로 다시)”. 회신 연락']],
+ gram:[['身内に敬語を使わない','외부 사람에게 자기 쪽 직원을 말할 때는 높이지 않고 「担当の者」처럼 낮춥니다. 한국어는 상대 앞에서도 담당자를 높여도 되지만 일본어는 다릅니다.'],['〜次第(즉시)','「戻り次第」는 “돌아오는 대로 곧”입니다. 동사 ます형에 次第가 붙습니다.']],
+ nuance:'일본어 전화 응대의 핵심은 우치와 소토(내부와 외부) 구분입니다. 한국어 원문에서 담당자가 높임으로 나와도, 일본어 외부 응대에서는 「担当の者」로 낮춰 말해야 합니다.',
+ yomi:'担当(たんとう) 者(もの) 席(せき)を外(はず)して 戻(もど)り次第(しだい) 折(お)り返(かえ)し 連絡(れんらく)',
+ must:[['담당',['担当']],['자리 비움',['席を外']],['돌아오는 대로',['戻り次第']],['연락',['連絡']]]},
+{id:'b33',lang:'ja',topic:'마케팅·프로모션',src:'今回のキャンペーンは、新規のお客様の獲得を目的としています。',ref:'이번 캠페인은 신규 고객 확보를 목적으로 합니다.',
+ key:[['獲得','“확보·유치”. 마케팅에서는 획득보다 확보'],['〜を目的としています','목적을 밝히는 기획서 표현']],
+ gram:[['〜を目的としています','「〜を目的とする」는 “~을 목적으로 하다”입니다. 목적을 분명히 밝히는 보고서와 기획서 표현입니다.'],['新規와 既存','「新規」(신규)와 「既存」(기존)은 짝으로 씁니다. 「新規顧客」「既存顧客」.']],
+ nuance:'「獲得」은 사전적으로 “획득”이지만 고객에 대해서는 “확보·유치”가 자연스럽습니다.',
+ yomi:'今回(こんかい) 新規(しんき) 獲得(かくとく) 目的(もくてき)',
+ must:[['캠페인',['캠페인']],['신규',['신규']],['고객',['고객','손님']],['확보/유치',['확보','유치','획득']],['목적',['목적']]]},
+{id:'b34',lang:'ko',topic:'신제품·상품 개발',src:'시제품을 만들어서 다음 달까지 테스트해 보려고 합니다.',ref:'試作品を作って、来月までにテストしてみる予定です。',
+ key:[['試作品','“시제품”. 양산 전 단계'],['〜てみる','“~해 보다”. 시도']],
+ gram:[['〜てみる','동사 て형에 みる가 붙어 “~해 보다”라는 시도를 나타냅니다. 「テストしてみる」.'],['〜予定です','이미 잡힌 계획입니다. 「〜つもりです」는 개인의 의지, 「〜予定です」는 일정이 정해진 계획이라는 차이가 있습니다.']],
+ nuance:'“~하려고 합니다”는 의지와 계획 사이에 있어서 「つもりです」와 「予定です」 중 하나를 골라야 합니다. 일정이 확정된 느낌이면 「予定です」가 맞습니다.',
+ yomi:'試作品(しさくひん) 来月(らいげつ) 予定(よてい)',
+ must:[['시제품',['試作']],['다음 달',['来月']],['테스트',['テスト']]]},
+{id:'b35',lang:'ja',topic:'시장·경쟁 분석',src:'競合他社の動向を踏まえて、価格設定を見直す必要があります。',ref:'경쟁사의 동향을 바탕으로 가격 책정을 재검토할 필요가 있습니다.',
+ key:[['〜を踏まえて','“~을 바탕으로·감안하여”'],['見直す','“재검토하다·다시 조정하다”']],
+ gram:[['〜を踏まえて','“~을 바탕으로, 감안하여”입니다. 근거를 전제로 다음 판단을 이끄는 보고서 표현입니다.'],['〜する必要があります','“~할 필요가 있다”입니다. 「〜しなければなりません」보다 객관적인 판단에 쓰입니다.']],
+ nuance:'「見直す」는 단순히 “다시 보다”가 아니라 “재검토하고 필요하면 고치다”까지 포함합니다. 가격 맥락에서는 “재조정”도 자연스럽습니다.',
+ yomi:'競合他社(きょうごうたしゃ) 動向(どうこう) 踏(ふ)まえて 価格設定(かかくせってい) 見直(みなお)す 必要(ひつよう)',
+ must:[['경쟁사',['경쟁사','경쟁 업체','경쟁업체']],['동향',['동향']],['가격',['가격']],['재검토',['재검토','재조정','다시 검토']],['필요',['필요']]]},
+{id:'b36',lang:'ko',topic:'계약·조건 협의',src:'계약 기간은 일 년으로 하되, 자동 갱신은 하지 않는 조건으로 부탁드립니다.',ref:'契約期間は一年とし、自動更新なしという条件でお願いいたします。',
+ key:[['〜とし','“~로 하고”. 계약서 문체의 연결'],['自動更新','“자동 갱신”. 계약 리스크 핵심 용어']],
+ gram:[['〜とし(중지법)','「一年とし、」는 「〜とする」의 연결형입니다. 조건을 정리해 나열하는 계약서 문체입니다.'],['〜という条件で','“~라는 조건으로”입니다. 조건을 명시해 제안할 때 씁니다.']],
+ nuance:'한국어의 “~하되”는 두 조건을 이어서 제시하는 구문으로, 일본어에서는 「〜とし、〜」로 옮깁니다. 자동 갱신 유무는 계약에서 가장 먼저 확인할 항목입니다.',
+ yomi:'契約期間(けいやくきかん) 一年(いちねん) 自動更新(じどうこうしん) 条件(じょうけん)',
+ must:[['계약 기간',['契約期間']],['일 년',['一年','1年']],['자동 갱신',['自動更新']],['조건',['条件']]]},
+{id:'b37',lang:'ja',topic:'IT·시스템',src:'システムの不具合により、一時的にご利用いただけない状況です。',ref:'시스템 오류로 인해 일시적으로 이용하실 수 없는 상황입니다.',
+ key:[['不具合','“오류·문제”. 안내문에서 쓰는 표현'],['一時的に','“일시적으로”']],
+ gram:[['〜により(원인)','“~에 의해, ~로 인해”입니다. 「〜のため」보다 격식이 있어 공지문에 많이 쓰입니다.'],['ご利用いただけない','「利用できない」의 존경형 부정입니다. 상대의 이용을 높여 “이용하실 수 없다”가 됩니다.']],
+ nuance:'「不具合」는 오류, 결함, 문제를 두루 가리키는 안내문 용어입니다. 「バグ」는 개발자끼리 쓰는 말이라 고객 안내에는 쓰지 않습니다.',
+ yomi:'不具合(ふぐあい) 一時的(いちじてき) 利用(りよう)',
+ must:[['시스템',['시스템']],['오류/문제',['오류','문제','장애','결함']],['일시적',['일시적']],['이용',['이용']]]},
+{id:'b38',lang:'ko',topic:'클레임·불만 대응',src:'불편을 드린 점 깊이 사과드리며, 같은 일이 없도록 재발 방지책을 마련하겠습니다.',ref:'ご不便をおかけしましたことを深くお詫び申し上げ、再発防止策を講じてまいります。',
+ key:[['お詫び申し上げ','공식 사과의 최고 격식 겸양'],['再発防止策','“재발 방지책”']],
+ gram:[['お詫び申し上げる','「謝る」의 가장 격식 높은 겸양입니다. 말로는 「申し訳ございません」, 문서와 공식 사과에는 「お詫び申し上げます」를 씁니다.'],['〜てまいります','「〜ていく」의 겸양형입니다. 앞으로 계속 노력하겠다는 뉘앙스입니다.']],
+ nuance:'사과와 대책을 한 문장에 담는 구조입니다. “마련하겠습니다”는 문어체로 「講じる」(조치를 취하다)를 쓰면 클레임 대응 문서답습니다.',
+ yomi:'不便(ふべん) 深(ふか)く 詫(わ)び 再発防止策(さいはつぼうしさく) 講(こう)じて',
+ must:[['불편',['不便','迷惑']],['사과',['詫び','謝罪']],['재발 방지',['再発防止']],['조치/마련',['講じ','策定','整備','対策']]]},
+{id:'b39',lang:'ja',topic:'출장·해외 업무',src:'来月、ソウルへ出張する予定ですので、その際にお目にかかれれば幸いです。',ref:'다음 달 서울로 출장 갈 예정이라, 그때 뵐 수 있으면 좋겠습니다.',
+ key:[['お目にかかる','“뵙다”. 「会う」의 겸양어'],['〜れば幸いです','소극적인 희망·요청의 문어 표현']],
+ gram:[['お目にかかる','「会う」의 겸양어입니다. 내가 상대를 만난다는 뜻으로 자신을 낮춥니다. 상대가 우리를 만나는 경우는 「お会いになる」를 씁니다.'],['〜れば幸いです','“~해 주시면 감사하겠다, ~하면 좋겠다”입니다. 직접적인 요구를 피하는 정중한 문어 패턴입니다.']],
+ nuance:'한국어의 “뵐 수 있으면 좋겠습니다”는 「お目にかかれれば幸いです」와 거의 1:1로 대응합니다. 요청이 아니라 소망을 말하는 톤이라 상대에게 부담을 덜 줍니다.',
+ yomi:'来月(らいげつ) 出張(しゅっちょう) 予定(よてい) 目(め)にかかれれば 幸(さいわ)い',
+ must:[['다음 달',['다음 달','다음달']],['서울',['서울']],['출장',['출장']],['뵙다',['뵙','뵐','만나']],['희망',['좋겠','바랍','감사']]]},
+{id:'b40',lang:'ko',topic:'사과·감사',src:'바쁘신 중에 시간을 내 주셔서 진심으로 감사드립니다.',ref:'お忙しい中、お時間をいただき、誠にありがとうございます。',
+ key:[['お忙しい中','“바쁘신 중에”. 상대의 시간을 쓴 것에 대한 쿠션'],['誠に','“진심으로·정말로”. 격식 있는 강조']],
+ gram:[['お忙しい中(쿠션)','“바쁘신 중에”입니다. 상대의 시간을 쓰게 한 것에 대한 정형 쿠션이며, 「お忙しいところ」도 같은 뜻입니다.'],['誠に(강조 부사)','「本当に」의 격식 있는 말입니다. 편지와 인사에서 쓰고 「とても」보다 공손합니다.']],
+ nuance:'한국어의 “진심으로 감사드립니다”는 「誠にありがとうございます」로 격을 맞춥니다. 「心から」보다 「誠に」가 비즈니스 인사에 어울립니다.',
+ yomi:'忙(いそが)しい 中(なか) 時間(じかん) 誠(まこと)に',
+ must:[['바쁘신 중에',['忙しい']],['시간',['時間']],['감사',['ありがとう','感謝']]]},
+{id:'b41',lang:'ja',topic:'법무·규정·인허가',src:'営業許可の申請には、数週間かかる見込みです。',ref:'영업 허가 신청에는 몇 주가 걸릴 전망입니다.',
+ key:[['営業許可','“영업 허가”. 한국의 영업 신고와 구분'],['見込みです','확정이 아닌 전망']],
+ gram:[['〜見込みです','“~할 전망입니다”. 확정이 아닌 예상을 정중히 전하는 표현으로, 「予定」보다 불확실성이 높습니다.'],['数+단위','「数週間」은 “몇 주”입니다. 「数日」「数か月」처럼 数에 단위가 붙으면 대략의 기간이고, 정확한 숫자는 「二、三週間」처럼 씁니다.']],
+ nuance:'한국의 “영업 신고”와 일본의 「営業許可」는 제도가 다를 수 있습니다. 통역할 때 “허가”와 “신고”를 구분해서 옮기세요.',
+ yomi:'営業許可(えいぎょうきょか) 申請(しんせい) 数週間(すうしゅうかん) 見込(みこ)み',
+ must:[['영업 허가',['영업허가','영업 허가']],['신청',['신청']],['몇 주',['몇 주','몇주','수 주']],['전망',['전망','예상','예정']]]},
+{id:'b42',lang:'ko',topic:'일정 조율·약속',src:'다음 주 화요일 오후 세 시 이후라면 언제든지 괜찮습니다.',ref:'来週の火曜日の午後三時以降でしたら、いつでも大丈夫です。',
+ key:[['〜以降','그 시각을 포함한 “~ 이후”'],['〜でしたら','「〜なら」의 정중형']],
+ gram:[['〜以降','“~ 이후”입니다. 기준 시점을 포함합니다. 「以後」는 기준 시점 이후만, 「以降」은 기준 시점부터를 가리키는 경향이 있습니다.'],['〜でしたら','「〜なら」의 정중형입니다. 조건을 제시하며 부드럽게 말할 때 씁니다.']],
+ nuance:'일본어의 「大丈夫です」는 “괜찮다”와 “필요 없다” 두 뜻으로 쓰여 오해가 생기기 쉽습니다. 일정 조율에서는 「問題ございません」을 쓰면 더 분명합니다.',
+ yomi:'来週(らいしゅう) 火曜日(かようび) 午後三時(ごごさんじ) 以降(いこう)',
+ must:[['다음 주',['来週']],['화요일',['火曜']],['오후',['午後']],['세 시',['三時','3時']],['이후',['以降','以後']]]},
+{id:'b43',lang:'ja',topic:'전시·행사',src:'会場は、初日から多くの来場者でにぎわっておりました。',ref:'행사장은 첫날부터 많은 방문객으로 붐볐습니다.',
+ key:[['にぎわう','사람이 많아 활기가 있다'],['来場者','“행사 방문객”']],
+ gram:[['〜でにぎわう','「にぎわう」는 사람이 많아 활기가 넘친다는 뜻입니다. 사람이 많은 긍정적 분위기에 쓰고, 부정적 혼잡은 「混雑する」를 씁니다.'],['〜ておりました(과거 진행)','「ていました」의 겸양형입니다. 과거 상태를 정중히 보고할 때 씁니다.']],
+ nuance:'한국어 “붐볐다”는 긍정과 부정 모두 가능하지만 「にぎわう」는 긍정입니다. 행사 보고에서는 “활기가 넘쳤다”도 자연스럽습니다.',
+ yomi:'会場(かいじょう) 初日(しょにち) 来場者(らいじょうしゃ) 多(おお)く',
+ must:[['행사장',['행사장','회장','전시장']],['첫날',['첫날','초일']],['방문객',['방문객','내방객','관람객']],['붐빔/활기',['붐비','붐볐','북적','활기']]]},
+{id:'b44',lang:'ko',topic:'직원 교육·평가',src:'신입 직원이 한 달 안에 기본 업무를 익힐 수 있도록 교육 계획을 세웠습니다.',ref:'新入社員が一か月以内に基本業務を習得できるよう、研修計画を立てました。',
+ key:[['習得','“습득”. 업무에는 習得·身につける'],['研修計画','“교육 계획”']],
+ gram:[['〜よう(목적)','동사 가능형에 「よう」가 붙어 “~할 수 있도록”이 됩니다. 「できるよう」「覚えられるよう」.'],['〜以内に','“~ 이내에”입니다. 기한 안에 끝낸다는 범위를 강조하며 「〜までに」보다 기간의 범위를 말합니다.']],
+ nuance:'“익히다”는 일본어로 「覚える」(암기), 「身につける」(체득), 「習得する」(습득)로 나뉩니다. 업무 능력에는 「習得」이나 「身につける」가 맞습니다.',
+ yomi:'新入社員(しんにゅうしゃいん) 一か月以内(いっかげついない) 基本業務(きほんぎょうむ) 習得(しゅうとく) 研修計画(けんしゅうけいかく) 立(た)てました',
+ must:[['신입',['新入']],['한 달',['一か月','1か月','一ヶ月','1ヶ月','一カ月']],['기본 업무',['基本業務','基本的な業務']],['교육/연수',['研修','教育']],['계획',['計画']]]},
+{id:'b45',lang:'ja',topic:'근무·휴가·급여',src:'有給休暇を取得される場合は、一週間前までにお申し出ください。',ref:'유급 휴가를 사용하실 경우에는 일주일 전까지 신청해 주십시오.',
+ key:[['取得される','“취득(사용)하시다”. 존경형'],['お申し出ください','“신청·신고해 주세요”']],
+ gram:[['〜される(존경)','「取得する」를 「取得される」로 바꾸는 것이 동사의 가장 기본적인 존경 표현입니다. 「ご取得になる」보다 간단합니다.'],['〜前までに','「一週間前までに」는 기한선을 정하는 표현입니다. “일주일 전까지”.']],
+ nuance:'일본의 「有給休暇」는 한국의 “연차”에 해당합니다. 맥락에 따라 “연차”와 “유급 휴가”를 구분해서 옮기세요.',
+ yomi:'有給休暇(ゆうきゅうきゅうか) 取得(しゅとく) 一週間前(いっしゅうかんまえ) 申(もう)し出(で)',
+ must:[['유급 휴가',['유급 휴가','유급휴가','연차','휴가']],['일주일',['일주일','1주일','한 주']],['전까지',['전까지']],['신청',['신청','알려']]]},
+{id:'b46',lang:'ko',topic:'품질·재고 관리',src:'입고된 상품에 파손이 있어서 교환을 요청드리고 싶습니다.',ref:'入荷した商品に破損がありましたので、交換をお願いしたく存じます。',
+ key:[['破損','“파손”. 클레임 문서의 한자어'],['交換','“교환”']],
+ gram:[['〜がありましたので','이유를 설명하는 「ので」에 과거형이 붙었습니다. 문제 발생을 사실로 전한 뒤 요청으로 이어가는 정석 구조입니다.'],['〜たく存じます','희망·요청의 문어 겸양입니다. 「〜したいと思います」를 격식 있게 말한 것입니다(b26 참고).']],
+ nuance:'「破損」은 문서와 클레임에서 쓰는 한자어이고, 「壊れる」는 구어입니다. 품질이 나쁜 경우는 「不良品」으로 구분합니다.',
+ yomi:'入荷(にゅうか) 商品(しょうひん) 破損(はそん) 交換(こうかん) 存(ぞん)じます',
+ must:[['입고',['入荷']],['상품',['商品']],['파손',['破損']],['교환',['交換']],['요청',['お願い']]]},
+{id:'b47',lang:'ja',topic:'위기·사고 대응',src:'原因が判明するまで、対応を一時停止させていただきます。',ref:'원인이 밝혀질 때까지 대응을 일시 중단하겠습니다.',
+ key:[['判明する','“사실이 밝혀지다”'],['一時停止','“일시 중단”']],
+ gram:[['〜まで(지속)','「判明するまで」는 그 시점까지 상태가 이어진다는 뜻입니다. 기한을 나타내는 「までに」와 구분하세요.'],['〜させていただきます','사정을 설명한 뒤 자기 쪽 조치를 알릴 때 쓰는 관용 표현입니다. 상대의 양해를 구하는 뉘앙스가 있습니다.']],
+ nuance:'「判明する」는 조사나 확인으로 사실이 드러나는 것을 말하는 보고 용어이고, 「わかる」는 일상어입니다. 위기 대응 보고에서는 「判明」이 자연스럽습니다.',
+ yomi:'原因(げんいん) 判明(はんめい) 対応(たいおう) 一時停止(いちじていし)',
+ must:[['원인',['원인']],['밝혀짐',['밝혀','파악','판명']],['대응',['대응']],['일시 중단',['일시 중단','잠시 중단','일시 중지']]]},
+{id:'b48',lang:'ko',topic:'매출·KPI 보고',src:'목표 대비 달성률은 95%로, 거의 계획대로 진행되고 있습니다.',ref:'目標に対する達成率は95%で、ほぼ計画どおりに進んでいます。',
+ key:[['達成率','“달성률”'],['ほぼ','“거의”. 긍정 문장에 자연스러움']],
+ gram:[['〜に対する','“~에 대한, ~ 대비”입니다. 「目標に対する達成率」는 “목표 대비 달성률”이며, 「前年対比」처럼 「〜対比」를 쓰기도 합니다.'],['ほぼ와 ほとんど','「ほぼ」는 긍정 문장에 자연스럽습니다. 「ほとんど」는 부정과 함께 쓰는 경우가 많습니다.']],
+ nuance:'퍼센트 읽기는 「きゅうじゅうごパーセント」입니다. 숫자를 한자로 옮길 때는 「95%」를 그대로 써도 되지만 소리 내어 읽을 때는 정확히 읽어야 합니다.',
+ yomi:'目標(もくひょう) 達成率(たっせいりつ) 九十五(きゅうじゅうご)パーセント 計画(けいかく) 進(すす)んで',
+ must:[['목표',['目標']],['달성률',['達成率']],['95%',['95','九十五']],['계획',['計画']],['거의',['ほぼ']]]},
+{id:'b49',lang:'ja',topic:'회의 진행·공유',src:'それでは、定刻になりましたので会議を始めさせていただきます。',ref:'그럼 정각이 되었으니 회의를 시작하겠습니다.',
+ key:[['始めさせていただきます','진행자가 정중하게 개시를 알리는 표현'],['定刻','정해진 시각']],
+ gram:[['〜させていただきます','상대의 양해를 전제로 내가 하는 행위를 겸손하게 말하는 표현입니다. 회의 개시 선언의 정형입니다.']],
+ nuance:'한국어는 “시작하겠습니다”로 끝나지만 일본어는 「定刻になりましたので」처럼 이유를 먼저 붙이면 자연스럽습니다.',
+ yomi:'定刻(ていこく) 会議(かいぎ) 始(はじ)めさせていただきます',
+ must:[['정각',['정각']],['회의',['회의']],['시작',['시작']]]},
+{id:'b50',lang:'ko',topic:'승인·의사결정 요청',src:'내일까지 결재 부탁드려도 될까요?',ref:'明日までにご決裁をお願いできますでしょうか。',
+ key:[['ご決裁','상대의 행위라 「ご」를 붙임'],['お願いできますでしょうか','가능 여부를 묻는 이중 정중 의뢰']],
+ gram:[['〜できますでしょうか','「できますか」보다 부드러운 의뢰입니다. 기한이 있는 부탁에 적합합니다.']],
+ nuance:'기한을 말하면서 강요 느낌을 줄이려면 가능 여부를 묻는 형태로 말합니다.',
+ yomi:'明日(あした) 決裁(けっさい) 願(ねが)',
+ must:[['내일까지',['明日まで']],['결재',['決裁']],['부탁',['お願い']]]},
+{id:'b51',lang:'ja',topic:'승인·의사결정 요청',src:'本件は、今期の予算内で進めてよろしいでしょうか。',ref:'이 건은 이번 분기 예산 안에서 진행해도 괜찮을까요?',
+ key:[['よろしいでしょうか','허가를 구할 때의 정중 표현'],['予算内','예산 범위 안']],
+ gram:[['〜てよろしいでしょうか','「〜てもいいですか」의 정중형으로, 승인을 구하는 정형 표현입니다.']],
+ nuance:'「今期」는 현재의 회계기간을 가리킵니다. 분기인지 연도인지는 회사마다 달라 통역 시 확인이 필요합니다.',
+ yomi:'本件(ほんけん) 今期(こんき) 予算内(よさんない) 進(すす)めて',
+ must:[['이 건',['이 건']],['분기',['분기']],['예산',['예산']],['진행',['진행']]]},
+{id:'b52',lang:'ko',topic:'매출·KPI 보고',src:'이번 달 매출은 전년 동월 대비 8% 증가했습니다.',ref:'今月の売上は、前年同月比で8%増加しました。',
+ key:[['前年同月比','전년 동월 대비'],['〜%増加','증가율 표현']],
+ gram:[['〜比','「対比」가 아니라 「前年同月比」처럼 「比」 한 글자로 씁니다.']],
+ nuance:'증감 보고는 기준(전년 동월/전월)을 먼저 말하고 수치를 말하면 오해가 없습니다.',
+ yomi:'今月(こんげつ) 売上(うりあげ) 前年同月比(ぜんねんどうげつひ) 増加(ぞうか)',
+ must:[['이번 달',['今月']],['매출',['売上']],['전년 동월 대비',['前年同月比']],['8%',['8']],['증가',['増加']]]},
+{id:'b53',lang:'ja',topic:'발주·결제·청구',src:'請求書の金額に相違がございますので、ご確認いただけますでしょうか。',ref:'청구서의 금액에 차이가 있으니 확인해 주실 수 있을까요?',
+ key:[['相違がございます','「違い」의 정중한 표현'],['ご確認いただけますでしょうか','확인을 부탁하는 정중한 의뢰']],
+ gram:[['〜がございます','「ある」의 정중어입니다. 문제를 지적할 때 「間違い」보다 「相違」가 비난 느낌이 적습니다.']],
+ nuance:'틀렸다고 단정하지 않고 “차이가 있다”로 말하는 것이 거래처와의 마찰을 줄입니다.',
+ yomi:'請求書(せいきゅうしょ) 金額(きんがく) 相違(そうい) 確認(かくにん)',
+ must:[['청구서',['청구서']],['금액',['금액']],['차이',['차이']],['확인',['확인']]]},
+{id:'b54',lang:'ko',topic:'발주·결제·청구',src:'발주서는 오늘 중으로 메일로 보내 드리겠습니다.',ref:'発注書は本日中にメールでお送りいたします。',
+ key:[['本日中','오늘 중(「今日中」보다 격식)'],['お送りいたします','보내다의 겸양']],
+ gram:[['お+동사+いたす','내 행위를 낮추는 겸양 패턴입니다. 상대에게 가는 행위에 씁니다.']],
+ nuance:'「本日中」은 「ほんじつちゅう」로 읽습니다. 기한을 말할 때 「まで」와 「中」의 차이(까지/이내)를 의식합니다.',
+ yomi:'発注書(はっちゅうしょ) 本日中(ほんじつちゅう) 送(おく)りいたします',
+ must:[['발주서',['発注書']],['오늘 중',['本日中']],['메일',['メール']],['보내',['送']]]},
+{id:'b55',lang:'ja',topic:'인사·자기소개',src:'いつもお世話になっております。先日はお時間をいただき、ありがとうございました。',ref:'항상 신세 지고 있습니다. 일전에는 시간을 내 주셔서 감사했습니다.',
+ key:[['お世話になっております','거래 인사의 정형'],['お時間をいただき','상대의 시간을 받았다는 감사']],
+ gram:[['お世話になっております','“항상 도움 주셔서 감사합니다”에 해당하는 비즈니스 인사로, 메일·전화 첫머리에 씁니다.']],
+ nuance:'한국어에는 같은 인사가 없어 “안녕하세요”로 옮기기 쉽지만, 관계를 확인하는 인사라 생략하면 어색합니다.',
+ yomi:'世話(せわ) 先日(せんじつ) 時間(じかん)',
+ must:[['신세',['신세']],['일전',['일전']],['시간',['시간']],['감사',['감사']]]},
+{id:'b56',lang:'ko',topic:'인사·자기소개',src:'앞으로도 잘 부탁드리겠습니다.',ref:'今後ともどうぞよろしくお願いいたします。',
+ key:[['今後とも','앞으로도'],['よろしくお願いいたします','관계 지속을 부탁하는 정형 마무리']],
+ gram:[['今後とも','「とも」는 “~도 계속”의 뜻으로 관계가 이어지길 바라는 인사에 씁니다.']],
+ nuance:'첫 만남·메일 끝·회의 끝 어디서든 쓰는 만능 마무리 인사입니다.',
+ yomi:'今後(こんご) 願(ねが)',
+ must:[['앞으로',['今後']],['잘',['よろしく']],['부탁',['お願い']]]},
+{id:'b57',lang:'ja',topic:'접대·식사 자리',src:'本日はお忙しい中、お越しいただきありがとうございます。',ref:'오늘 바쁘신 중에 와 주셔서 감사합니다.',
+ key:[['お忙しい中','바쁜 중에'],['お越しいただき','와 주시다(「来る」의 존경)']],
+ gram:[['お越しになる','「来る」의 존경어입니다. 방문에 대한 감사 인사에 씁니다.']],
+ nuance:'접대·행사 시작 인사의 정형입니다. 「お忙しい中」는 상대의 시간을 쓴 것에 대한 배려 표현입니다.',
+ yomi:'本日(ほんじつ) 忙(いそが)しい 越(こ)し',
+ must:[['오늘',['오늘']],['바쁘',['바쁘']],['와 주',['와 주']],['감사',['감사']]]},
+{id:'b58',lang:'ko',topic:'접대·식사 자리',src:'건배 제의를 해도 될까요?',ref:'乾杯の音頭を取らせていただいてもよろしいでしょうか。',
+ key:[['音頭を取る','선창·주도하다'],['〜させていただいても','양해를 구하는 겸손 표현']],
+ gram:[['〜させていただいてもよろしいでしょうか','내가 하려는 행위에 대해 허락을 구하는 가장 정중한 형태입니다.']],
+ nuance:'「乾杯の音頭」는 건배 선창을 뜻합니다. 상급자가 있으면 이렇게 허락을 구하는 것이 무난합니다.',
+ yomi:'乾杯(かんぱい) 音頭(おんど) 取(と)らせて',
+ must:[['乾杯',['乾杯']],['音頭',['音頭']],['よろしい',['よろしい']]]},
+{id:'b59',lang:'ja',topic:'채용·면접',src:'当社を志望された理由をお聞かせください。',ref:'저희 회사를 지원하신 이유를 말씀해 주세요.',
+ key:[['当社','우리 회사(대외적)'],['お聞かせください','말씀해 주세요']],
+ gram:[['お+동사+ください','상대에게 부탁하는 정중한 명령형입니다. 면접관이 자주 쓰는 표현입니다.']],
+ nuance:'「当社」는 말하는 쪽 회사를 가리킵니다. 한국어의 “저희 회사”에 해당합니다.',
+ yomi:'当社(とうしゃ) 志望(しぼう) 理由(りゆう) 聞(き)かせ',
+ must:[['저희 회사',['저희 회사']],['지원',['지원']],['이유',['이유']],['말씀',['말씀']]]},
+{id:'b60',lang:'ko',topic:'채용·면접',src:'지금까지의 경력에 대해 간단히 말씀해 주시겠습니까?',ref:'これまでのご経歴について、簡単にお話しいただけますか。',
+ key:[['ご経歴','상대의 경력(존경)'],['お話しいただけますか','말씀해 주시겠습니까']],
+ gram:[['〜について','“~에 대해”. 면접 질문의 주제를 제시하는 표현입니다.']],
+ nuance:'「経歴」은 이력 전체, 「職歴」은 직장 경력만 가리킵니다.',
+ yomi:'経歴(けいれき) 簡単(かんたん) 話(はな)し',
+ must:[['これまで',['これまで']],['経歴',['経歴']],['簡単',['簡単']],['お話し',['お話し']]]},
+{id:'b61',lang:'ja',topic:'근무·휴가·급여',src:'来週の金曜日に有給休暇を取得したいのですが、よろしいでしょうか。',ref:'다음 주 금요일에 연차 휴가를 쓰고 싶은데 괜찮을까요?',
+ key:[['有給休暇','유급 휴가(연차)'],['取得したいのですが','“~하고 싶은데요”로 완곡하게 의사 전달']],
+ gram:[['〜のですが','뒤에 말을 생략하고 상대의 판단을 구하는 완곡 표현입니다.']],
+ nuance:'「休みたい」보다 「取得したい」가 공적이고 정중합니다. 승인 여부를 묻는 마무리를 붙입니다.',
+ yomi:'来週(らいしゅう) 金曜日(きんようび) 有給休暇(ゆうきゅうきゅうか) 取得(しゅとく)',
+ must:[['다음 주',['다음 주']],['금요일',['금요일']],['연차',['연차']],['쓰고 싶',['쓰고 싶']]]},
+{id:'b62',lang:'ko',topic:'근무·휴가·급여',src:'이번 달 야근 수당은 다음 달 급여에 포함됩니다.',ref:'今月の残業手当は、来月の給与に含まれます。',
+ key:[['残業手当','야근 수당'],['給与に含まれる','급여에 포함되다']],
+ gram:[['〜に含まれる','“~에 포함되다”. 급여·견적서 등에서 자주 씁니다.']],
+ nuance:'일본은 「給料」보다 서류에서 「給与」를 쓰고, 지급일은 보통 월말·익월 정해진 날입니다.',
+ yomi:'残業手当(ざんぎょうてあて) 給与(きゅうよ) 含(ふく)まれます',
+ must:[['今月',['今月']],['残業手当',['残業手当']],['来月',['来月']],['給与',['給与']]]},
+{id:'b63',lang:'ja',topic:'점포 오픈·공사',src:'オフィスの内装工事は、来月十日に完了する予定です。',ref:'사무실 내장 공사는 다음 달 10일에 완료될 예정입니다.',
+ key:[['内装工事','인테리어 공사'],['完了する予定','완료 예정']],
+ gram:[['〜する予定です','확정에 가까운 예정을 말할 때의 표현입니다.']],
+ nuance:'「予定」는 일정이 정해진 경우, 「つもり」는 개인 의도에 씁니다.',
+ yomi:'内装工事(ないそうこうじ) 来月(らいげつ) 十日(とおか) 完了(かんりょう)',
+ must:[['사무실',['사무실']],['내장 공사',['내장 공사']],['다음 달',['다음 달']],['10일',['10일']],['완료',['완료']]]},
+{id:'b64',lang:'ko',topic:'점포 오픈·공사',src:'공사 중 소음으로 주변에 폐를 끼치지 않도록 주의해 주세요.',ref:'工事中の騒音で近隣にご迷惑をおかけしないよう、ご注意ください。',
+ key:[['近隣','이웃·주변'],['迷惑をかける','폐를 끼치다']],
+ gram:[['〜ないよう','“~하지 않도록”. 주의 환기에 쓰는 표현입니다.']],
+ nuance:'일본은 이웃에 대한 배려가 중요해 공사 전 인사·공지가 기본입니다.',
+ yomi:'工事中(こうじちゅう) 騒音(そうおん) 近隣(きんりん) 迷惑(めいわく) 注意(ちゅうい)',
+ must:[['工事',['工事']],['騒音',['騒音']],['近隣',['近隣']],['迷惑',['迷惑']],['注意',['注意']]]},
+{id:'b65',lang:'ja',topic:'접객·메뉴 안내',src:'お客様のご要望に沿って、いくつかプランをご用意いたしました。',ref:'고객님의 요청에 맞춰 몇 가지 플랜을 준비했습니다.',
+ key:[['ご要望に沿って','요청에 맞춰'],['ご用意いたしました','준비했습니다(겸양)']],
+ gram:[['〜に沿って','기준·요청에 맞춘다는 뜻입니다. 「に合わせて」보다 방향성에 충실하다는 느낌입니다.']],
+ nuance:'제안 설명에서는 “선택지를 준비했다”고 말하면 상대가 고르기 쉬워집니다.',
+ yomi:'要望(ようぼう) 用意(ようい)',
+ must:[['고객님',['고객님']],['요청',['요청']],['플랜',['플랜']],['준비',['준비']]]},
+{id:'b66',lang:'ko',topic:'접객·메뉴 안내',src:'잠시만 기다려 주시겠습니까? 담당자를 불러오겠습니다.',ref:'少々お待ちいただけますでしょうか。担当者を呼んでまいります。',
+ key:[['少々お待ちいただけますでしょうか','잠시 기다려 주실 수 있을까요'],['呼んでまいります','불러오겠습니다(겸양)']],
+ gram:[['〜てまいります','「行ってくる」의 겸양형입니다. 자리를 비우는 행동을 정중하게 말합니다.']],
+ nuance:'대기를 부탁할 땐 이유와 행동을 함께 말하면 상대가 안심합니다.',
+ yomi:'少々(しょうしょう) 待(ま)ち 担当者(たんとうしゃ) 呼(よ)んで',
+ must:[['少々',['少々']],['お待ち',['お待ち']],['担当者',['担当者']],['呼んでまいります',['呼んでまいります']]]},
+{id:'b67',lang:'ja',topic:'시설·설비·위생',src:'エアコンの調子が悪いので、業者に点検を依頼しました。',ref:'에어컨 상태가 좋지 않아서 업체에 점검을 의뢰했습니다.',
+ key:[['調子が悪い','상태가 안 좋다'],['点検を依頼','점검 의뢰']],
+ gram:[['調子が悪い','기계·몸 상태에 모두 쓰는 일상 표현입니다.']],
+ nuance:'원인을 단정하지 않고 “상태가 안 좋다”로 먼저 말하는 것이 현장에서 안전합니다.',
+ yomi:'調子(ちょうし) 業者(ぎょうしゃ) 点検(てんけん) 依頼(いらい)',
+ must:[['에어컨',['에어컨']],['상태',['상태']],['업체',['업체']],['점검',['점검']],['의뢰',['의뢰']]]},
+{id:'b68',lang:'ko',topic:'시설·설비·위생',src:'회의실 프로젝터가 켜지지 않습니다. 확인 부탁드립니다.',ref:'会議室のプロジェクターがつきません。ご確認をお願いします。',
+ key:[['つきません','(전원이) 켜지지 않는다'],['ご確認をお願いします','확인 요청']],
+ gram:[['つく','전등·기기가 “켜지다”는 「つく」, 켜는 행위는 「つける」입니다.']],
+ nuance:'증상을 먼저 짧게 말하고 요청을 이어서 말합니다.',
+ yomi:'会議室(かいぎしつ) 確認(かくにん)',
+ must:[['会議室',['会議室']],['プロジェクター',['プロジェクター']],['つきません',['つきません']],['確認',['確認']]]},
+{id:'b69',lang:'ja',topic:'마케팅·프로모션',src:'新規顧客の獲得を目的に、来月からキャンペーンを実施します。',ref:'신규 고객 확보를 목적으로 다음 달부터 캠페인을 실시합니다.',
+ key:[['新規顧客','신규 고객'],['獲得を目的に','확보를 목적으로']],
+ gram:[['〜を目的に','목적을 밝힐 때 쓰는 표현으로 보고서·기획서에 자주 나옵니다.']],
+ nuance:'“캠페인을 한다”는 「行う」보다 「実施する」가 공문서적입니다.',
+ yomi:'新規顧客(しんきこきゃく) 獲得(かくとく) 目的(もくてき) 実施(じっし)',
+ must:[['신규 고객',['신규 고객']],['확보',['확보']],['목적',['목적']],['캠페인',['캠페인']],['실시',['실시']]]},
+{id:'b70',lang:'ko',topic:'마케팅·프로모션',src:'광고비 대비 효과를 먼저 검증해 보고 싶습니다.',ref:'広告費に対する効果を、まず検証してみたいと考えております。',
+ key:[['広告費','광고비'],['検証してみたい','검증해 보고 싶다']],
+ gram:[['〜と考えております','“~라고 생각합니다”의 겸양으로, 의견을 부드럽게 제시합니다.']],
+ nuance:'「検証」은 사실을 확인하는 것, 「確認」보다 분석적입니다.',
+ yomi:'広告費(こうこくひ) 効果(こうか) 検証(けんしょう) 考(かんが)え',
+ must:[['広告費',['広告費']],['効果',['効果']],['検証',['検証']],['考え',['考え']]]},
+{id:'b71',lang:'ja',topic:'신제품·상품 개발',src:'試作品が完成しましたので、来週モニターテストを行います。',ref:'시제품이 완성되었으니 다음 주에 모니터 테스트를 실시합니다.',
+ key:[['試作品','시제품'],['モニターテスト','소비자 시험']],
+ gram:[['〜ましたので','이유를 부드럽게 제시하는 「ので」의 정중형입니다.']],
+ nuance:'「試作」는 시험 제작이며 「量産」은 양산입니다.',
+ yomi:'試作品(しさくひん) 完成(かんせい) 来週(らいしゅう)',
+ must:[['시제품',['시제품']],['완성',['완성']],['다음 주',['다음 주']],['테스트',['테스트']]]},
+{id:'b72',lang:'ko',topic:'신제품·상품 개발',src:'발매 일정은 개발 상황에 따라 변경될 수 있습니다.',ref:'発売日程は、開発状況によって変更となる可能性があります。',
+ key:[['〜によって','상황에 따라'],['可能性があります','가능성이 있다']],
+ gram:[['〜となる可能性','확정이 아님을 밝히는 완곡 표현입니다.']],
+ nuance:'약속이 아닌 “가능성”으로 말해 책임 범위를 조절합니다.',
+ yomi:'発売(はつばい) 日程(にってい) 開発状況(かいはつじょうきょう) 変更(へんこう)',
+ must:[['発売',['発売']],['日程',['日程']],['開発状況',['開発状況']],['変更',['変更']],['可能性',['可能性']]]},
+{id:'b73',lang:'ja',topic:'시장·경쟁 분석',src:'競合他社の動向を踏まえ、価格戦略を見直す必要があります。',ref:'경쟁사 동향을 감안하여 가격 전략을 재검토할 필요가 있습니다.',
+ key:[['踏まえ','~을 근거로 삼아'],['見直す必要があります','재검토할 필요가 있다']],
+ gram:[['〜を踏まえ','“~을 고려하여”. 보고서·회의에서 자주 쓰는 연결 표현입니다.']],
+ nuance:'「見直す」는 완전 폐기가 아니라 재검토 조정의 뉘앙스입니다.',
+ yomi:'競合他社(きょうごうたしゃ) 動向(どうこう) 踏(ふ)まえ 価格戦略(かかくせんりゃく) 見直(みなお)す',
+ must:[['경쟁사',['경쟁사']],['동향',['동향']],['감안',['감안']],['가격 전략',['가격 전략']],['재검토',['재검토']]]},
+{id:'b74',lang:'ko',topic:'시장·경쟁 분석',src:'이 시장은 앞으로 3년간 연평균 5% 성장할 것으로 예상됩니다.',ref:'この市場は、今後3年間で年平均5%成長すると見込まれています。',
+ key:[['年平均','연평균'],['見込まれています','전망·예상된다']],
+ gram:[['〜と見込まれる','객관적 전망을 말할 때 쓰는 수동형입니다.']],
+ nuance:'예측은 「予想」보다 근거가 있는 「見込み」로 말하면 신뢰감이 있습니다.',
+ yomi:'市場(しじょう) 今後(こんご) 年平均(ねんへいきん) 成長(せいちょう) 見込(みこ)まれて',
+ must:[['市場',['市場']],['今後',['今後']],['3年間',['3年間']],['年平均',['年平均']],['成長',['成長']],['見込',['見込']]]},
+{id:'b75',lang:'ja',topic:'법무·규정·인허가',src:'個人情報の取り扱いについては、社内規定に従ってください。',ref:'개인정보 취급에 대해서는 사내 규정에 따라 주세요.',
+ key:[['取り扱い','취급'],['社内規定','사내 규정']],
+ gram:[['〜に従って','규칙·지시에 따른다는 뜻입니다.']],
+ nuance:'개인정보는 일본에서도 엄격히 다뤄 “취급” 단어를 정확히 씁니다.',
+ yomi:'個人情報(こじんじょうほう) 取(と)り扱(あつか)い 社内規定(しゃないきてい) 従(したが)って',
+ must:[['개인정보',['개인정보']],['취급',['취급']],['사내 규정',['사내 규정']],['따라',['따라']]]},
+{id:'b76',lang:'ko',topic:'법무·규정·인허가',src:'이 계약서는 법무팀의 검토를 거친 후에 서명하겠습니다.',ref:'この契約書は、法務部の確認を経てから署名いたします。',
+ key:[['〜を経てから','~을 거친 후에'],['署名いたします','서명하겠습니다']],
+ gram:[['〜を経て','절차를 거친다는 뜻의 격식 표현입니다.']],
+ nuance:'서명 전 사내 검토 절차를 말해 두면 즉답을 피하는 이유가 분명해집니다.',
+ yomi:'契約書(けいやくしょ) 法務部(ほうむぶ) 確認(かくにん) 経(へ)て 署名(しょめい)',
+ must:[['契約書',['契約書']],['法務部',['法務部']],['確認',['確認']],['署名',['署名']]]},
+{id:'b77',lang:'ja',topic:'IT·시스템',src:'システムの不具合により、本日中の処理が遅れる見込みです。',ref:'시스템 오류로 인해 오늘 중 처리가 늦어질 전망입니다.',
+ key:[['不具合','오류·결함'],['遅れる見込み','지연될 전망']],
+ gram:[['〜により','원인을 객관적으로 말하는 격식 표현입니다.']],
+ nuance:'「不具合」는 책임을 단정하지 않는 중립적인 말로 업무에서 자주 씁니다.',
+ yomi:'不具合(ふぐあい) 本日中(ほんじつちゅう) 処理(しょり) 遅(おく)れる',
+ must:[['시스템',['시스템']],['오류',['오류']],['오늘 중',['오늘 중']],['처리',['처리']],['늦어질',['늦어질']]]},
+{id:'b78',lang:'ko',topic:'IT·시스템',src:'비밀번호를 재설정했으니 로그인해 보세요.',ref:'パスワードを再設定しましたので、ログインしてみてください。',
+ key:[['再設定','재설정'],['〜てみてください','~해 보세요']],
+ gram:[['〜てみる','시도를 권하는 표현입니다.']],
+ nuance:'IT 용어는 외래어(パスワード, ログイン)를 그대로 쓰는 경우가 많습니다.',
+ yomi:'再設定(さいせってい)',
+ must:[['パスワード',['パスワード']],['再設定',['再設定']],['ログイン',['ログイン']]]},
+{id:'b79',lang:'ja',topic:'전시·행사',src:'展示会の来場者数は、三日間で約五千人を見込んでいます。',ref:'전시회 방문자 수는 사흘간 약 5천 명을 예상하고 있습니다.',
+ key:[['来場者数','방문자 수'],['見込んでいます','예상하고 있다']],
+ gram:[['三日間','“사흘간”. 「日」의 읽기와 기간 표현에 주의합니다.']],
+ nuance:'숫자 읽기: 三日(みっか), 五千(ごせん). 큰 수는 또박또박 읽습니다.',
+ yomi:'展示会(てんじかい) 来場者数(らいじょうしゃすう) 三日間(みっかかん) 五千人(ごせんにん) 見込(みこ)んで',
+ must:[['전시회',['전시회']],['방문자',['방문자']],['사흘간',['사흘간']],['5천',['5천']],['예상',['예상']]]},
+{id:'b80',lang:'ko',topic:'전시·행사',src:'부스 설치는 전날 오후부터 가능합니다.',ref:'ブースの設営は、前日の午後から可能です。',
+ key:[['設営','설치·세팅'],['前日','전날']],
+ gram:[['〜から可能です','가능 시점을 알리는 표현입니다.']],
+ nuance:'행사에서는 「搬入(반입)」「設営(설치)」「撤収(철수)」를 구분합니다.',
+ yomi:'設営(せつえい) 前日(ぜんじつ) 午後(ごご) 可能(かのう)',
+ must:[['ブース',['ブース']],['設営',['設営']],['前日',['前日']],['午後',['午後']],['可能',['可能']]]},
+{id:'b81',lang:'ja',topic:'위기·사고 대응',src:'情報漏えいの可能性が判明したため、直ちに調査を開始しました。',ref:'정보 유출 가능성이 확인되어 즉시 조사를 시작했습니다.',
+ key:[['判明','판명·확인됨'],['直ちに','즉시']],
+ gram:[['〜したため','이유를 객관적으로 설명하는 격식 표현입니다.']],
+ nuance:'사고 보고는 사실→조치→향후 순서로 말합니다.',
+ yomi:'情報漏(じょうほうろう)えい 可能性(かのうせい) 判明(はんめい) 直(ただ)ちに 調査(ちょうさ)',
+ must:[['정보 유출',['정보 유출']],['가능성',['가능성']],['확인',['확인']],['즉시',['즉시']],['조사',['조사']]]},
+{id:'b82',lang:'ko',topic:'위기·사고 대응',src:'재발 방지책을 정리하여 이번 주 안에 보고하겠습니다.',ref:'再発防止策をまとめて、今週中にご報告いたします。',
+ key:[['再発防止策','재발 방지책'],['今週中','이번 주 안']],
+ gram:[['〜をまとめて','정리해서. 보고 약속에 쓰는 표현입니다.']],
+ nuance:'사고 대응에서는 “언제까지 무엇을”을 명확히 약속합니다.',
+ yomi:'再発防止策(さいはつぼうしさく) 今週中(こんしゅうちゅう) 報告(ほうこく)',
+ must:[['再発防止策',['再発防止策']],['まとめ',['まとめ']],['今週中',['今週中']],['報告',['報告']]]},
+{id:'b83',lang:'ja',topic:'출장·해외 업무',src:'来月、大阪へ二泊三日で出張する予定です。',ref:'다음 달에 오사카로 2박 3일 출장 갈 예정입니다.',
+ key:[['二泊三日','2박 3일'],['出張する予定','출장 예정']],
+ gram:[['二泊三日','숙박 수가 먼저 옵니다. 한국어 “2박 3일”과 순서가 같습니다.']],
+ nuance:'출장 일정은 지명·기간·목적 순으로 말합니다.',
+ yomi:'来月(らいげつ) 大阪(おおさか) 二泊三日(にはくみっか) 出張(しゅっちょう)',
+ must:[['다음 달',['다음 달']],['오사카',['오사카']],['2박 3일',['2박 3일']],['출장',['출장']]]},
+{id:'b84',lang:'ko',topic:'출장·해외 업무',src:'공항에 도착하면 연락드리겠습니다.',ref:'空港に到着しましたら、ご連絡いたします。',
+ key:[['到着しましたら','도착하면'],['ご連絡いたします','연락드리겠습니다']],
+ gram:[['〜しましたら','「〜したら」의 정중형으로 조건과 약속을 함께 말합니다.']],
+ nuance:'도착 연락은 일본에서 기본 매너입니다.',
+ yomi:'空港(くうこう) 到着(とうちゃく) 連絡(れんらく)',
+ must:[['空港',['空港']],['到着',['到着']],['連絡',['連絡']]]},
+{id:'b85',lang:'ja',topic:'출장·해외 업무',src:'海外出張の精算には、領収書の提出が必要です。',ref:'해외 출장 정산에는 영수증 제출이 필요합니다.',
+ key:[['精算','정산'],['領収書','영수증']],
+ gram:[['〜が必要です','필요 조건을 말하는 기본 표현입니다.']],
+ nuance:'「精算(정산 처리)」와 「清算(채무 청산)」을 혼동하지 않도록 주의합니다.',
+ yomi:'海外出張(かいがいしゅっちょう) 精算(せいさん) 領収書(りょうしゅうしょ) 提出(ていしゅつ)',
+ must:[['해외 출장',['해외 출장']],['정산',['정산']],['영수증',['영수증']],['제출',['제출']]]},
+{id:'b86',lang:'ko',topic:'업무 보고·진척',src:'현재 진행률은 약 70%이며 예정대로 진행되고 있습니다.',ref:'現在の進捗率は約70%で、予定どおり進んでおります。',
+ key:[['進捗率','진행률'],['予定どおり','예정대로']],
+ gram:[['進んでおります','「進んでいる」의 겸양 표현입니다.']],
+ nuance:'“진척”은 「進捗(しんちょく)」, 보고 첫머리에 수치를 말합니다.',
+ yomi:'現在(げんざい) 進捗率(しんちょくりつ) 約(やく) 予定(よてい) 進(すす)んで',
+ must:[['現在',['現在']],['進捗率',['進捗率']],['70',['70']],['予定どおり',['予定どおり']],['進んで',['進んで']]]},
+{id:'b87',lang:'ja',topic:'견적·가격 협상',src:'ご予算に合わせて、仕様を見直したお見積りを再提出いたします。',ref:'예산에 맞춰 사양을 재검토한 견적서를 다시 제출하겠습니다.',
+ key:[['仕様を見直す','사양을 재검토'],['再提出','다시 제출']],
+ gram:[['〜に合わせて','상대 조건에 맞춰 조정한다는 뜻입니다.']],
+ nuance:'가격을 깎는 대신 사양을 조정하는 제안은 협상에서 자주 씁니다.',
+ yomi:'予算(よさん) 仕様(しよう) 見積(みつも)り 再提出(さいていしゅつ)',
+ must:[['예산',['예산']],['사양',['사양']],['견적서',['견적서']],['다시 제출',['다시 제출']]]},
+{id:'b88',lang:'ko',topic:'계약·조건 협의',src:'계약 기간은 1년이며 별도의 의사 표시가 없으면 자동 갱신됩니다.',ref:'契約期間は1年間で、特段の意思表示がない場合は自動更新されます。',
+ key:[['特段の意思表示','별다른 의사 표시'],['自動更新','자동 갱신']],
+ gram:[['〜がない場合','조건을 제시하는 표현입니다.']],
+ nuance:'자동 갱신 조항은 해지 통지 기한과 함께 반드시 확인합니다.',
+ yomi:'契約期間(けいやくきかん) 意思表示(いしひょうじ) 自動更新(じどうこうしん)',
+ must:[['契約期間',['契約期間']],['1年間',['1年間']],['意思表示',['意思表示']],['自動更新',['自動更新']]]},
+{id:'b89',lang:'ja',topic:'납기·물류',src:'納期を一週間ほど前倒しすることは可能でしょうか。',ref:'납기를 일주일 정도 앞당기는 것이 가능할까요?',
+ key:[['前倒し','일정을 앞당김'],['可能でしょうか','가능한지 묻는 표현']],
+ gram:[['〜ほど','대략적인 양·기간을 나타냅니다.']],
+ nuance:'반대말은 「後ろ倒し」입니다. 가능 여부를 먼저 묻고 조건을 협의합니다.',
+ yomi:'納期(のうき) 一週間(いっしゅうかん) 前倒(まえだお)し 可能(かのう)',
+ must:[['납기',['납기']],['일주일',['일주일']],['앞당기',['앞당기']],['가능',['가능']]]},
+{id:'b90',lang:'ko',topic:'클레임·불만 대응',src:'불편을 끼쳐 드려 대단히 죄송합니다. 바로 교환해 드리겠습니다.',ref:'ご不便をおかけして大変申し訳ございません。すぐに交換いたします。',
+ key:[['ご不便をおかけして','불편을 끼쳐'],['申し訳ございません','깊은 사과']],
+ gram:[['申し訳ございません','「すみません」보다 격식 있는 사과입니다.']],
+ nuance:'클레임에는 사과→해결책 순으로 말하면 신뢰가 유지됩니다.',
+ yomi:'不便(ふべん) 申(もう)し訳(わけ) 交換(こうかん)',
+ must:[['ご不便',['ご不便']],['申し訳',['申し訳']],['すぐ',['すぐ']],['交換',['交換']]]},
+{id:'b91',lang:'ja',topic:'사과·감사',src:'先日は急なお願いにもかかわらず、迅速にご対応いただき感謝しております。',ref:'일전에는 갑작스러운 부탁에도 불구하고 신속하게 대응해 주셔서 감사하고 있습니다.',
+ key:[['〜にもかかわらず','~에도 불구하고'],['迅速に','신속하게']],
+ gram:[['〜にもかかわらず','상대의 배려를 부각하는 감사 표현입니다.']],
+ nuance:'감사할 때는 구체적으로 무엇이 도움이 됐는지 말합니다.',
+ yomi:'先日(せんじつ) 急(きゅう) 迅速(じんそく) 対応(たいおう) 感謝(かんしゃ)',
+ must:[['갑작스러운',['갑작스러운']],['부탁',['부탁']],['신속',['신속']],['대응',['대응']],['감사',['감사']]]},
+{id:'b92',lang:'ko',topic:'거절·완곡한 의견',src:'죄송하지만 이번에는 어려울 것 같습니다.',ref:'申し訳ありませんが、今回は難しいかと存じます。',
+ key:[['難しいかと存じます','어렵다고 생각합니다(완곡 거절)'],['今回は','이번에는']],
+ gram:[['難しい','일본어에서는 「できません」보다 「難しい」로 완곡하게 거절합니다.']],
+ nuance:'“이번에는”을 붙이면 관계를 이어 가는 거절이 됩니다.',
+ yomi:'申(もう)し訳(わけ) 今回(こんかい) 難(むずか)しい 存(ぞん)じます',
+ must:[['申し訳',['申し訳']],['今回',['今回']],['難しい',['難しい']],['存じ',['存じ']]]},
+{id:'b93',lang:'ja',topic:'업무 요청·확인',src:'念のため、資料の最終版をご共有いただけますでしょうか。',ref:'혹시 몰라서 그러는데, 자료 최종본을 공유해 주실 수 있을까요?',
+ key:[['念のため','혹시 몰라서·확인차'],['ご共有','공유']],
+ gram:[['念のため','상대를 의심하는 게 아니라 확인차라는 점을 밝히는 쿠션 말입니다.']],
+ nuance:'한국어 “혹시 모르니”에 해당합니다.',
+ yomi:'念(ねん) 資料(しりょう) 最終版(さいしゅうばん) 共有(きょうゆう)',
+ must:[['혹시 몰라',['혹시 몰라']],['자료',['자료']],['최종본',['최종본']],['공유',['공유']]]},
+{id:'b94',lang:'ko',topic:'전화·이메일 응대',src:'지금 통화 괜찮으신가요? 5분 정도면 됩니다.',ref:'今、お電話よろしいでしょうか。五分ほどで済みます。',
+ key:[['お電話よろしいでしょうか','통화 가능한지 확인'],['済みます','끝납니다']],
+ gram:[['〜で済む','~로 끝난다. 소요 시간을 먼저 말해 상대 부담을 줄입니다.']],
+ nuance:'일본 비즈니스 전화는 첫머리에 통화 가능 여부를 묻는 것이 매너입니다.',
+ yomi:'電話(でんわ) 五分(ごふん) 済(す)みます',
+ must:[['今',['今']],['電話',['電話']],['よろしい',['よろしい']],['五分',['五分']]]},
+{id:'b95',lang:'ja',topic:'직원 교육·평가',src:'新入社員向けの研修を、来週から二週間の日程で実施します。',ref:'신입사원 대상 연수를 다음 주부터 2주 일정으로 실시합니다.',
+ key:[['〜向けの','~ 대상의'],['日程','일정']],
+ gram:[['〜から〜の日程で','시작 시점과 기간을 함께 말하는 표현입니다.']],
+ nuance:'신입은 「新入社員」, 이직자는 「中途採用」입니다.',
+ yomi:'新入社員(しんにゅうしゃいん) 研修(けんしゅう) 二週間(にしゅうかん) 実施(じっし)',
+ must:[['신입사원',['신입사원']],['연수',['연수']],['다음 주',['다음 주']],['2주',['2주']],['실시',['실시']]]},
+{id:'b96',lang:'ko',topic:'품질·재고 관리',src:'재고 수량이 장부와 맞지 않아 다시 확인하고 있습니다.',ref:'在庫数が帳簿と合わないため、再確認しております。',
+ key:[['帳簿','장부'],['合わない','맞지 않는다']],
+ gram:[['〜ため','이유를 제시하는 격식 표현입니다.']],
+ nuance:'재고 차이는 원인 단정 없이 “확인 중”이라고 말하는 것이 안전합니다.',
+ yomi:'在庫数(ざいこすう) 帳簿(ちょうぼ) 再確認(さいかくにん)',
+ must:[['在庫数',['在庫数']],['帳簿',['帳簿']],['合わない',['合わない']],['再確認',['再確認']]]},
+{id:'b97',lang:'ja',topic:'회의 진행·공유',src:'議事録は本日中に作成し、関係者に共有いたします。',ref:'회의록은 오늘 중에 작성하여 관계자에게 공유하겠습니다.',
+ key:[['議事録','회의록'],['関係者','관계자']],
+ gram:[['〜し、〜いたします','동작을 연결하며 약속하는 문어체 표현입니다.']],
+ nuance:'회의 후 회의록 공유 약속은 일본 직장의 기본입니다.',
+ yomi:'議事録(ぎじろく) 本日中(ほんじつちゅう) 作成(さくせい) 関係者(かんけいしゃ) 共有(きょうゆう)',
+ must:[['회의록',['회의록']],['오늘 중',['오늘 중']],['작성',['작성']],['관계자',['관계자']],['공유',['공유']]]},
+{id:'b98',lang:'ko',topic:'계약·조건 협의',src:'지연 시 위약금이 발생하는지 확인하고 싶습니다.',ref:'遅延した場合に違約金が発生するかどうか、確認させていただきたいです。',
+ key:[['違約金','위약금'],['発生する','발생하다']],
+ gram:[['〜かどうか','“~인지 아닌지”. 확인 질문에 씁니다.']],
+ nuance:'위약금은 조건·금액·상한을 함께 확인합니다.',
+ yomi:'遅延(ちえん) 違約金(いやくきん) 発生(はっせい) 確認(かくにん)',
+ must:[['遅延',['遅延']],['違約金',['違約金']],['発生',['発生']],['確認',['確認']]]},
+{id:'b99',lang:'ja',topic:'업무 보고·진척',src:'課題が二点ございますので、ご報告いたします。',ref:'과제가 두 가지 있어서 보고드립니다.',
+ key:[['二点','두 가지(항목 수)'],['ご報告いたします','보고드립니다']],
+ gram:[['〜点','항목·사항을 세는 단위입니다.']],
+ nuance:'보고 첫머리에 개수를 말하면 듣는 사람이 정리하기 쉽습니다.',
+ yomi:'課題(かだい) 二点(にてん) 報告(ほうこく)',
+ must:[['과제',['과제']],['두 가지',['두 가지']],['보고',['보고']]]},
+{id:'b100',lang:'ko',topic:'견적·가격 협상',src:'견적서에 부가세가 포함되어 있는지 알려 주세요.',ref:'お見積書に消費税が含まれているか、お知らせください。',
+ key:[['消費税','소비세(부가세)'],['含まれている','포함되어 있다']],
+ gram:[['〜か、お知らせください','내용 확인을 요청하는 표현입니다.']],
+ nuance:'일본의 부가세는 「消費税」이며 세금 포함(税込)/별도(税別) 구분이 중요합니다.',
+ yomi:'見積書(みつもりしょ) 消費税(しょうひぜい) 含(ふく)まれて 知(し)らせ',
+ must:[['見積書',['見積書']],['消費税',['消費税']],['含まれて',['含まれて']],['知らせ',['知らせ']]]},
+{id:'b101',lang:'ja',topic:'상품·서비스 소개',src:'当製品は、洗練されたデザインと直感的な操作性を兼ね備えています。',ref:'이 제품은 세련된 디자인과 직관적인 조작성을 겸비하고 있습니다.',
+ key:[['洗練された','세련된'],['直感的な操作性','직관적인 조작성'],['兼ね備えている','여러 장점을 함께 갖추다']],
+ gram:[['〜た+名詞','동사 과거형이 명사 앞에서 형용사처럼 쓰이는 수식 방식입니다. 「洗練された」「厳選された」처럼 상품 소개에 자주 나옵니다.']],
+ nuance:'한국어의 “~한 디자인”은 일본어에서 「〜された」 같은 연체 수식으로 옮기면 자연스럽습니다.',
+ yomi:'当製品(とうせいひん) 洗練(せんれん) 直感的(ちょっかんてき) 操作性(そうさせい) 兼(か)ね備(そな)えて',
+ must:[['제품',['제품']],['세련된 디자인',['세련된 디자인']],['직관적',['직관적']],['겸비',['겸비']]]},
+{id:'b102',lang:'ko',topic:'상품·서비스 소개',src:'누구나 쉽게 사용할 수 있도록 설계된 가볍고 튼튼한 제품입니다.',ref:'どなたでも簡単にお使いいただけるよう設計された、軽くて丈夫な製品です。',
+ key:[['どなたでも','누구든지(정중)'],['〜よう設計された','~하도록 설계된'],['軽くて丈夫','가볍고 튼튼한']],
+ gram:[['軽くて丈夫','형용사를 「〜くて」로 이어 두 가지 장점을 나열합니다.']],
+ nuance:'「누구나」는 「誰でも」보다 「どなたでも」가 고객 대상 문장에 적합합니다.',
+ yomi:'簡単(かんたん) 設計(せっけい) 軽(かる)くて 丈夫(じょうぶ)',
+ must:[['どなたでも',['どなたでも']],['簡単',['簡単']],['設計',['設計']],['軽くて',['軽くて']],['丈夫',['丈夫']]]},
+{id:'b103',lang:'ja',topic:'프레젠테이션·PPT 표현',src:'次のスライドをご覧ください。ポイントは三つあります。',ref:'다음 슬라이드를 봐 주세요. 포인트는 세 가지입니다.',
+ key:[['ご覧ください','봐 주세요(존경)'],['ポイント','핵심'],['三つ','세 가지']],
+ gram:[['ご覧ください','「見てください」의 존경 표현으로 발표에서 화면을 안내할 때 씁니다.']],
+ nuance:'발표 첫머리에 개수를 말하면 청중이 구조를 잡기 쉽습니다.',
+ yomi:'次(つぎ) 覧(らん) 三(みっ)つ',
+ must:[['다음 슬라이드',['다음 슬라이드']],['포인트',['포인트']],['세 가지',['세 가지']]]},
+{id:'b104',lang:'ko',topic:'프레젠테이션·PPT 표현',src:'결론부터 말씀드리면, 비용을 약 20% 줄일 수 있습니다.',ref:'結論から申し上げますと、コストを約20%削減できます。',
+ key:[['結論から申し上げますと','결론부터 말씀드리자면'],['約20%','약 20%'],['削減できます','줄일 수 있다']],
+ gram:[['〜から申し上げますと','발표·보고에서 핵심을 먼저 말할 때의 정형 표현입니다.']],
+ nuance:'「줄이다」는 「減らす」보다 비즈니스 자료에서 「削減」이 자연스럽습니다.',
+ yomi:'結論(けつろん) 申(もう)し上(あ)げます 削減(さくげん)',
+ must:[['結論から',['結論から']],['申し上げ',['申し上げ']],['コスト',['コスト']],['20%',['20']],['削減',['削減']]]},
+{id:'b105',lang:'ja',topic:'수식어·캐치프레이즈',src:'業界最高水準の品質を、お求めやすい価格で。',ref:'업계 최고 수준의 품질을 부담 없는 가격에.',
+ key:[['業界最高水準','업계 최고 수준'],['お求めやすい','구매하기 쉬운(부담 없는)'],['〜を、〜で。','동사를 생략한 캐치프레이즈 구조']],
+ gram:[['体言止め','문장을 명사로 끝내 간결하고 인상 깊게 만드는 방식입니다. 광고 문구와 슬라이드 제목에 많이 씁니다.']],
+ nuance:'“합리적인 가격”을 「お求めやすい価格」로 말하면 고급스러운 인상을 줍니다.',
+ yomi:'業界(ぎょうかい) 最高水準(さいこうすいじゅん) 品質(ひんしつ) 求(もと)めやすい 価格(かかく)',
+ must:[['업계 최고 수준',['업계 최고 수준']],['품질',['품질']],['부담 없는 가격',['부담 없는 가격']]]},
+{id:'b106',lang:'ko',topic:'수식어·캐치프레이즈',src:'한 번 쓰면 손을 뗄 수 없는 압도적인 편리함.',ref:'一度使えば手放せなくなる、圧倒的な便利さ。',
+ key:[['手放せなくなる','놓을 수 없게 되다'],['圧倒的な','압도적인'],['便利さ','편리함']],
+ gram:[['〜さ','형용사에 붙여 정도를 명사로 만듭니다. 「便利→便利さ」, 「使いやすい→使いやすさ」.']],
+ nuance:'캐치프레이즈에서는 「〜さ」 명사화가 슬로건다운 간결함을 줍니다.',
+ yomi:'一度(いちど) 使(つか)えば 手放(てばな)せなくなる 圧倒的(あっとうてき) 便利(べんり)さ',
+ must:[['一度',['一度']],['手放せ',['手放せ']],['圧倒的',['圧倒的']],['便利',['便利']]]},
+{id:'b107',lang:'ja',topic:'상품·서비스 소개',src:'従来品に比べて、消費電力を約三十パーセント抑えることができます。',ref:'기존 제품에 비해 소비 전력을 약 30퍼센트 줄일 수 있습니다.',
+ key:[['従来品','기존 제품'],['〜に比べて','~에 비해'],['抑える','(수치를) 낮추다·억제하다']],
+ gram:[['〜に比べて','비교 대상을 제시하는 표현입니다. 「より」보다 격식이 있습니다.']],
+ nuance:'「抑える」는 비용·소비·부담을 낮추는 문맥에 자주 씁니다.',
+ yomi:'従来品(じゅうらいひん) 消費電力(しょうひでんりょく) 抑(おさ)える',
+ must:[['기존 제품',['기존 제품']],['소비 전력',['소비 전력']],['30',['30']],['줄일',['줄일']]]},
+{id:'b108',lang:'ko',topic:'상품·서비스 소개',src:'고객의 목소리를 반영해 사용 편의성을 한층 더 높였습니다.',ref:'お客様の声を反映し、使い勝手を一段と高めました。',
+ key:[['お客様の声','고객의 목소리'],['使い勝手','사용 편의성'],['一段と','한층 더']],
+ gram:[['一段と','정도가 한 단계 더 높아졌음을 나타내는 부사입니다. 「さらに」「より一層」와 비슷합니다.']],
+ nuance:'개선 사항을 말할 때 “무엇을 반영했는지”를 먼저 말하면 설득력이 있습니다.',
+ yomi:'声(こえ) 反映(はんえい) 使(つか)い勝手(がって) 一段(いちだん)と 高(たか)め',
+ must:[['お客様の声',['お客様の声']],['反映',['反映']],['使い勝手',['使い勝手']],['一段と',['一段と']],['高め',['高め']]]},
+{id:'b109',lang:'ja',topic:'프레젠테이션·PPT 표현',src:'こちらのグラフからお分かりいただけるように、売上は右肩上がりで推移しています。',ref:'이 그래프에서 알 수 있듯이 매출은 꾸준히 오르는 추세입니다.',
+ key:[['お分かりいただけるように','보시면 아시듯이'],['右肩上がり','우상향(오르는 추세)'],['推移','추이']],
+ gram:[['〜ように','“~듯이”. 자료를 가리키며 근거를 제시할 때 씁니다.']],
+ nuance:'「右肩上がり」는 그래프가 오른쪽 위로 오르는 모양에서 온 말로 성장 추세를 뜻합니다.',
+ yomi:'売上(うりあげ) 右肩上(みぎかたあ)がり 推移(すいい)',
+ must:[['그래프',['그래프']],['알 수 있듯이',['알 수 있듯이']],['매출',['매출']],['추세',['추세']]]},
+{id:'b110',lang:'ko',topic:'프레젠테이션·PPT 표현',src:'자세한 내용은 별첨 자료를 참고해 주시기 바랍니다.',ref:'詳細は、別添資料をご参照いただけますようお願いいたします。',
+ key:[['詳細','자세한 내용'],['別添資料','별첨 자료'],['ご参照いただけますよう','참고해 주시도록']],
+ gram:[['〜ますようお願いいたします','“~해 주시기를 바랍니다”. 공문·자료에서 쓰는 격식 있는 의뢰입니다.']],
+ nuance:'발표 끝에 자료 참조를 안내할 때의 정형 표현입니다.',
+ yomi:'詳細(しょうさい) 別添資料(べってんしりょう) 参照(さんしょう) 願(ねが)い',
+ must:[['詳細',['詳細']],['別添資料',['別添資料']],['参照',['参照']],['お願い',['お願い']]]},
+{id:'b111',lang:'ja',topic:'수식어·캐치프레이즈',src:'暮らしに寄り添う、やさしい使い心地。',ref:'생활에 가까이 다가가는, 부드러운 사용감.',
+ key:[['寄り添う','곁에서 함께하다'],['使い心地','사용감'],['やさしい','부드러운·다정한']],
+ gram:[['寄り添う','상대의 생활이나 마음에 다가가는 뉘앙스로 브랜드 문구에 자주 쓰입니다.']],
+ nuance:'「使い心地」는 사용했을 때의 느낌으로 한국어 “사용감”에 해당합니다.',
+ yomi:'暮(く)らし 寄(よ)り添(そ)う 使(つか)い心地(ごこち)',
+ must:[['생활',['생활']],['다가가',['다가가']],['부드러운',['부드러운']],['사용감',['사용감']]]},
+{id:'b112',lang:'ko',topic:'수식어·캐치프레이즈',src:'시간을 줄이고 가치를 더하는 스마트한 업무 환경.',ref:'時間を削減し、価値を高めるスマートな業務環境。',
+ key:[['時間を削減し','시간을 줄이고'],['価値を高める','가치를 높이다'],['スマートな','스마트한']],
+ gram:[['〜し、〜する+名詞','동사 두 개를 이어 명사를 길게 수식합니다. 슬로건에서 자주 씁니다.']],
+ nuance:'외래어 「スマート」는 영어보다 “똑똑하고 세련된” 뉘앙스로 쓰입니다.',
+ yomi:'削減(さくげん) 価値(かち) 高(たか)める 業務環境(ぎょうむかんきょう)',
+ must:[['時間',['時間']],['削減',['削減']],['価値',['価値']],['スマート',['スマート']],['業務環境',['業務環境']]]},
+{id:'b113',lang:'ja',topic:'상품·서비스 소개',src:'厳選された素材だけを使用し、一つひとつ丁寧に仕上げています。',ref:'엄선한 소재만을 사용해 하나하나 정성스럽게 마무리했습니다.',
+ key:[['厳選された','엄선된'],['一つひとつ','하나하나'],['丁寧に仕上げる','정성스럽게 마무리하다']],
+ gram:[['丁寧に','“정성스럽게”. 품질 설명에서 자주 쓰는 부사입니다.']],
+ nuance:'「丁寧」는 “정중”이 아니라 “꼼꼼하고 정성스러운” 뜻으로도 씁니다.',
+ yomi:'厳選(げんせん) 素材(そざい) 丁寧(ていねい) 仕上(しあ)げて',
+ must:[['엄선',['엄선']],['소재',['소재']],['하나하나',['하나하나']],['정성스럽게',['정성스럽게']]]},
+{id:'b114',lang:'ko',topic:'상품·서비스 소개',src:'합리적인 가격으로 고품질 서비스를 이용하실 수 있습니다.',ref:'お手頃な価格で、高品質なサービスをご利用いただけます。',
+ key:[['お手頃な価格','부담 없는 가격'],['高品質な','고품질의'],['ご利用いただけます','이용하실 수 있습니다']],
+ gram:[['お手頃','가격이 부담 없다는 뜻으로 「リーズナブル」와 비슷합니다.']],
+ nuance:'“합리적인 가격”은 「合理的」보다 「お手頃」「リーズナブル」가 자연스럽습니다.',
+ yomi:'手頃(てごろ) 価格(かかく) 高品質(こうひんしつ) 利用(りよう)',
+ must:[['お手頃',['お手頃']],['価格',['価格']],['高品質',['高品質']],['サービス',['サービス']],['ご利用',['ご利用']]]},
+{id:'b115',lang:'ja',topic:'프레젠테이션·PPT 표현',src:'まず、現状の課題を整理したうえで、解決策をご提案します。',ref:'먼저 현재의 과제를 정리한 다음, 해결책을 제안드리겠습니다.',
+ key:[['現状','현재 상태'],['課題','과제'],['〜したうえで','~한 뒤에']],
+ gram:[['〜たうえで','순서를 나타내는 표현으로 “~한 다음에”입니다.']],
+ nuance:'발표의 흐름을 먼저 말해 주면 청중이 따라가기 쉽습니다.',
+ yomi:'現状(げんじょう) 課題(かだい) 整理(せいり) 解決策(かいけつさく) 提案(ていあん)',
+ must:[['현재',['현재']],['과제',['과제']],['정리',['정리']],['해결책',['해결책']],['제안',['제안']]]},
+{id:'b116',lang:'ko',topic:'프레젠테이션·PPT 표현',src:'이 슬라이드에서는 세 가지 핵심 메시지를 말씀드리겠습니다.',ref:'このスライドでは、三つの重要なメッセージをお伝えします。',
+ key:[['三つの重要な','세 가지 중요한'],['メッセージ','메시지'],['お伝えします','전해 드리겠습니다']],
+ gram:[['お伝えします','「言います」의 겸양 표현으로 “전해 드리겠습니다”에 가깝습니다.']],
+ nuance:'「핵심」은 「核心」보다 「重要な」「ポイント」가 발표에서 자연스럽습니다.',
+ yomi:'三(みっ)つ 重要(じゅうよう) 伝(つた)え',
+ must:[['スライド',['スライド']],['三つ',['三つ']],['重要',['重要']],['メッセージ',['メッセージ']],['お伝え',['お伝え']]]},
+{id:'b117',lang:'ja',topic:'수식어·캐치프레이즈',src:'一目でわかる、シンプルで美しいデザイン。',ref:'한눈에 알 수 있는, 심플하고 아름다운 디자인.',
+ key:[['一目でわかる','한눈에 알 수 있는'],['シンプルで美しい','심플하고 아름다운'],['体言止め','명사로 끝내는 문장']],
+ gram:[['〜で、〜い+名詞','형용동사와 형용사를 「で」로 이어 명사를 수식합니다.']],
+ nuance:'“한눈에”는 「一目で」, 직관성을 강조할 때 자주 씁니다.',
+ yomi:'一目(ひとめ) 美(うつく)しい',
+ must:[['한눈에',['한눈에']],['심플',['심플']],['아름다운',['아름다운']],['디자인',['디자인']]]},
+{id:'b118',lang:'ko',topic:'수식어·캐치프레이즈',src:'일상에 작은 여유를 선물하는 포근한 공간.',ref:'日常にささやかなゆとりを贈る、心地よい空間。',
+ key:[['ささやかな','소박한·작은'],['ゆとり','여유'],['心地よい','편안한']],
+ gram:[['贈る','물건뿐 아니라 감정·경험을 “선물하다”로도 쓰는 동사입니다.']],
+ nuance:'“포근한”은 「心地よい」「ぬくもりのある」로 옮깁니다.',
+ yomi:'日常(にちじょう) 贈(おく)る 心地(ここち)よい 空間(くうかん)',
+ must:[['日常',['日常']],['ささやか',['ささやか']],['ゆとり',['ゆとり']],['贈る',['贈る']],['心地よい',['心地よい']],['空間',['空間']]]},
+{id:'b119',lang:'ja',topic:'상품·서비스 소개',src:'このサービスは、導入から運用まで一貫してサポートする点が特長です。',ref:'이 서비스는 도입부터 운영까지 일관되게 지원하는 점이 특징입니다.',
+ key:[['導入から運用まで','도입부터 운영까지'],['一貫して','일관되게'],['特長','(장점으로서의) 특징']],
+ gram:[['特長と特徴','「特長」은 장점, 「特徴」는 중립적 특징입니다.']],
+ nuance:'제품 설명에서는 「特長」을 쓰면 장점이라는 뉘앙스가 분명해집니다.',
+ yomi:'導入(どうにゅう) 運用(うんよう) 一貫(いっかん) 特長(とくちょう)',
+ must:[['도입',['도입']],['운영',['운영']],['일관',['일관']],['지원',['지원']],['특징',['특징']]]},
+{id:'b120',lang:'ko',topic:'상품·서비스 소개',src:'처음 사용하시는 분도 바로 익숙해질 수 있습니다.',ref:'初めてお使いになる方でも、すぐにお慣れいただけます。',
+ key:[['初めてお使いになる方','처음 사용하시는 분'],['〜でも','~라도'],['お慣れいただけます','익숙해지실 수 있습니다']],
+ gram:[['お使いになる','「使う」의 존경 표현입니다.']],
+ nuance:'고객에게는 「あなた」 대신 「お客様」「〜方」를 씁니다.',
+ yomi:'初(はじ)めて 使(つか)い 慣(な)れ',
+ must:[['初めて',['初めて']],['お使い',['お使い']],['すぐ',['すぐ']],['慣れ',['慣れ']]]},
+{id:'b121',lang:'ja',topic:'프레젠테이션·PPT 표현',src:'本日は、貴重なお時間をいただき、誠にありがとうございます。',ref:'오늘 귀중한 시간을 내 주셔서 정말 감사합니다.',
+ key:[['貴重なお時間','귀중한 시간'],['いただき','~해 주셔서'],['誠に','진심으로']],
+ gram:[['誠に','「本当に」보다 격식 있는 강조 부사입니다.']],
+ nuance:'발표 시작 인사로 쓰며, 청중에 대한 감사를 먼저 표현합니다.',
+ yomi:'本日(ほんじつ) 貴重(きちょう) 誠(まこと)に',
+ must:[['오늘',['오늘']],['귀중한',['귀중한']],['시간',['시간']],['감사',['감사']]]},
+{id:'b122',lang:'ko',topic:'프레젠테이션·PPT 표현',src:'질문은 발표가 끝난 뒤에 받겠습니다.',ref:'ご質問は、発表の後にお受けいたします。',
+ key:[['ご質問','질문(존경)'],['お受けいたします','받겠습니다(겸양)'],['〜の後に','~뒤에']],
+ gram:[['お受けいたします','내가 하는 행위를 낮추는 겸양 표현입니다.']],
+ nuance:'질의 응답 안내는 발표 서두에 미리 말해 두면 좋습니다.',
+ yomi:'質問(しつもん) 発表(はっぴょう) 後(あと) 受(う)け',
+ must:[['質問',['質問']],['発表',['発表']],['後',['後']],['お受け',['お受け']]]},
+{id:'b123',lang:'ja',topic:'수식어·캐치프레이즈',src:'確かな技術と、細やかな気配りで、お客様の期待を超えてまいります。',ref:'확실한 기술과 세심한 배려로 고객님의 기대를 뛰어넘겠습니다.',
+ key:[['確かな技術','확실한 기술'],['細やかな気配り','세심한 배려'],['期待を超える','기대를 뛰어넘다']],
+ gram:[['〜てまいります','결의를 겸손하게 말하는 표현으로 “~해 나가겠습니다”입니다.']],
+ nuance:'「細やか」는 섬세하고 세심하다는 뜻으로 서비스 문구에서 신뢰감을 줍니다.',
+ yomi:'確(たし)か 技術(ぎじゅつ) 細(こま)やか 気配(きくば)り 期待(きたい) 超(こ)えて',
+ must:[['확실한',['확실한']],['기술',['기술']],['세심한',['세심한']],['배려',['배려']],['기대',['기대']],['뛰어넘',['뛰어넘']]]},
+{id:'b124',lang:'ko',topic:'수식어·캐치프레이즈',src:'업계를 선도하는 혁신적인 기술력과 신뢰를 바탕으로 성장해 왔습니다.',ref:'業界をリードする革新的な技術力と信頼を基盤に、成長してまいりました。',
+ key:[['業界をリードする','업계를 선도하는'],['革新的な','혁신적인'],['〜を基盤に','~을 바탕으로']],
+ gram:[['〜を基盤に','“~을 바탕으로”. 회사 소개와 연혁 설명에 자주 씁니다.']],
+ nuance:'「リードする」는 선도한다는 뜻의 외래어로 「先導」보다 자연스럽습니다.',
+ yomi:'業界(ぎょうかい) 革新的(かくしんてき) 技術力(ぎじゅつりょく) 信頼(しんらい) 基盤(きばん) 成長(せいちょう)',
+ must:[['業界',['業界']],['リード',['リード']],['革新的',['革新的']],['技術力',['技術力']],['信頼',['信頼']],['成長',['成長']]]}
+];
+
+/* ---------- 문법 설명 (문장별) ---------- */
+const GRAM={
+b01:[['いただく(받다)의 시점 전환','「見積書をいただく」는 “견적서를 받다”로, 받는 사람의 시점입니다. 한국어는 “보내 주시다”처럼 주는 사람의 시점으로 바꿔 옮겨야 자연스럽습니다.'],['〜までに / 〜まで','までに는 그 시점 이전에 끝내는 기한이고, まで는 그 시점까지 계속되는 동작입니다. 水曜日までに送る(수요일 안에 보낸다) / 水曜日まで待つ(수요일까지 기다린다).']],
+b02:[['様態の〜そうです','동사 ます형에 そうです가 붙으면 눈앞의 징조로 본 “~할 것 같다”입니다. 遅れそうです. 전해 들은 말은 기본형에 붙어 「遅れるそうです」가 됩니다. 접속 형태로 구분하세요.'],['〜ほど(대략)','수량 뒤의 「ほど」는 “정도”라는 뜻의 대략 표현입니다. 「ぐらい」보다 정중하고 문어적입니다.']],
+b03:[['〜については','「〜について」에 「は」가 붙은 형태로, “~에 대해서는”처럼 화제를 구분해 제시합니다. 다른 건은 따로 있다는 뉘앙스가 있습니다.'],['ご+한자어+いたします','자기 행동을 낮추는 겸양 패턴입니다. 「連絡する」→「ご連絡いたします」. 한자어에는 「ご」, 순일본어 동사에는 「お」를 붙입니다(お送りします).']],
+b04:[['〜をお願いいたします','「お願いする」의 겸양 정중형으로, 명사+「をお願いいたします」는 업무 의뢰의 기본 틀입니다. ご確認をお願いいたします.'],['恐れ入りますが(쿠션 표현)','의뢰나 질문 앞에 붙여 상대의 부담을 줄입니다. 사과보다는 “송구하지만”에 가깝습니다. 「すみませんが」보다 공식적입니다.']],
+b05:[['〜ておりません','「いる」의 겸양어가 「おる」입니다. 「ていない」→「ていません」→「ておりません」. 자기 쪽 상황에만 쓰고, 상대의 행동에는 쓰지 않습니다.'],['まだ〜ていません(완료 부정)','「まだ+〜ていない」는 “아직 ~하지 않은 상태”입니다. 「確定しません」(확정하지 않는다)과 달리 지금까지 일어나지 않았음을 나타냅니다.']],
+b06:[['〜てから','동사 て형에 から가 붙으면 앞 동작이 끝난 뒤 다음 동작을 한다는 순서를 분명히 합니다. 한국어의 “~하고 나서”입니다.'],['こちら(우리 쪽)','1인칭 대신 쓰는 “저희 쪽”입니다. 사외 문서에서는 「弊社」, 대화에서는 「こちら」가 일반적입니다.']],
+b07:[['ご迷惑をおかけする','「迷惑をかける」의 겸양형입니다. 「お/ご+동사+する」는 자기 행동을 낮추는 겸양 패턴입니다.'],['て형의 이유 연결','「おかけして、申し訳ございません」의 て형은 이유·원인을 가볍게 잇습니다. “폐를 끼쳐서 죄송합니다”.']],
+b08:[['ご+한자어(상대 높임)','「ご都合」는 상대의 사정을 높이는 표현입니다. 상대의 것에는 「ご/お」, 내 것에는 겸양 패턴을 씁니다.'],['〜はいかがでしょうか','「どうですか」의 공손형으로, 의견이나 사정을 부드럽게 묻습니다. 「可能ですか」는 직접적이라 비즈니스에서는 딱딱합니다.']],
+b09:[['〜までに(기한)','「オープンまでに」는 오픈 이전에 완료한다는 뜻입니다. 완료 시점이 있는 동작과 함께 씁니다.'],['終える(타동사)와 終わる(자동사)','「終える」는 “마치다”(타동사), 「終わる」는 “끝나다”(자동사)입니다. 「研修を終える」(내가 마친다) / 「研修が終わる」(교육이 끝난다).']],
+b10:[['〜より(비교)','「想定より」처럼 비교 기준을 제시하는 “~보다”입니다. 뒤에는 정도를 나타내는 말이 옵니다.'],['かかる(비용·시간이 들다)','「費用がかかる」는 소요를 뜻하고, 「高い」는 가격 자체가 높다는 뜻입니다. “비용이 더 든다”는 「かかる」로 옮깁니다.']],
+b11:[['〜させていただく','사역에 いただく가 붙어 “(상대의 허락을 받아) ~하겠다”는 겸손한 표현이 됩니다. 남용하면 지나치게 낮춘 느낌이라, 단순 통지는 「いたします」가 간결합니다.'],['〜につきましては','「〜について」에 「は」가 붙은 격식 표현입니다. 문서와 공식 대화에서 씁니다.']],
+b12:[['〜ておりまして','이유를 부드럽게 말하고 뒤로 이어 가는 「〜ていて」의 겸양형입니다. 말끝을 완곡하게 이어서 거절을 누그러뜨립니다.'],['〜状況です','단정을 피하고 지금의 상황을 설명하는 표현입니다. 「難しいです」보다 객관적이고 부드럽게 들립니다.']],
+b13:[['〜の際に','「〜とき」의 격식 표현입니다. 문서와 안내문에서 많이 씁니다.'],['ご+한자어+ください','존경형 요청입니다. ご確認ください. 순일본어 동사는 「お+ます형+ください」(お待ちください)로 짝을 이룹니다.']],
+b14:[['〜で(방식·상태)','「税込みで表示する」의 「で」는 방식이나 상태를 나타냅니다. “세금 포함 방식으로”.'],['〜ております','「ている」의 겸양 정중형으로 현재 상태나 습관을 말합니다. 자기 쪽 행동에만 씁니다.']],
+b15:[['〜のある+명사','「アレルギーのあるお客様」에서 「ある」가 명사를 꾸밉니다. 수식절 안에서는 「が」가 「の」로 바뀔 수 있습니다.'],['お+동사 ます형+ください','「お知らせください」는 존경 요청 패턴입니다. 「知らせる」의 ます형 「知らせ」에 「お」를 붙입니다.']],
+b16:[['〜のため(이유)','명사+「のため」는 객관적이고 격식 있는 이유 표현입니다. 공지와 안내에 적합하고, 「〜ので」는 구어적이고 부드럽습니다.'],['遅れる(자동사)와 遅らせる(타동사)','「営業開始が遅れます」는 시작 시각이 늦어진다는 변화를 말합니다. 사람이 일부러 늦출 때는 「遅らせます」를 씁니다.']],
+b17:[['〜比(대비)','「前年同月比」는 “전년 동월 대비”로, 보고서 문체에서 쓰는 표현입니다. 뒤에 「+○%」나 「で」가 이어집니다.'],['割(わり)의 단위','「一割」=10%, 「二割」=20%, 「三割」=30%입니다. 割는 10%를 한 단위로 세는 말이라 숫자 환산에 주의하세요.']],
+b18:[['〜たうえで','동사 た형 뒤에 うえで가 붙으면 앞의 일을 마친 뒤 그 결과를 토대로 한다는 뜻입니다. 「〜てから」보다 신중하고 문서적입니다.'],['ご報告いたします','상사나 본사에게 쓰는 겸양입니다. 「報告します」보다 「ご報告いたします」가 관계에 맞습니다.']],
+b19:[['〜次第','동사 ます형에 次第가 붙으면 “~하는 대로 곧바로”입니다. 「〜たら」보다 즉시성과 순서가 분명합니다. 뒤에는 의지나 결과를 나타내는 말이 옵니다.'],['〜となります','「〜になります」보다 정중하고 객관적인 안내 표현입니다. 결과나 상태를 통지할 때 씁니다.']],
+b20:[['〜場合は','「発生する場合は」처럼 “~하는 경우에는”이라는 조건입니다. 「〜たら」보다 객관적이고, 보통 동사 기본형 뒤에 붙습니다.'],['〜いたします와 〜させていただきます','「ご相談いたします」는 자기 행동을 낮추는 겸양입니다. 「させていただきます」에는 허락과 은혜의 뉘앙스가 있어, 단순한 통지에는 「いたします」가 간결합니다.']],
+b21:[['〜いただけますか','「〜ていただく」의 가능형 의문으로, 「〜てください」보다 부드러운 의뢰입니다. 한국어는 “~해 주시겠습니까?”.'],['念のため','문장 앞에 놓이는 관용 표현입니다. “확인 차”라는 쿠션 역할을 해서 상대를 의심하는 느낌을 줄여 줍니다.']],
+b22:[['伺う(겸양어)','「行く・訪問する」의 겸양어로, 내가 상대를 방문할 때 씁니다. 상대가 오는 경우에는 「お越しになる」「いらっしゃる」를 씁니다.'],['〜予定です','확정된 계획과 일정입니다. 「〜つもりです」는 의지, 「〜予定です」는 이미 잡힌 일정이라는 점이 다릅니다.']],
+b23:[['できる限り','뒤에 의지나 노력의 표현이 이어져 “가능한 한”이 됩니다. 약속이 아니라 노력의 범위를 나타냅니다.'],['〜よう(목적)','「沿えるよう努めます」의 「よう」는 동사 기본형 뒤에서 목적이나 방향을 나타내는 “~하도록”입니다. 「ように」의 줄임 형태입니다.']],
+b24:[['〜た+명사(과거 수식)','「決まった内容」처럼 과거형이 명사를 꾸미면 이미 일어난 결과를 가리킵니다. “정해진 내용”.'],['共有いたします','한자어+いたす의 겸양 표현입니다. 「共有させていただきます」보다 간결하고, 허락을 구하는 느낌이 없습니다.']]
+};
+BANK.forEach(s=>{s.gram=(s.gram&&s.gram.length)?s.gram:(GRAM[s.id]||[]);});
+const TOPIC_GROUPS=[
+['회의·보고',['회의 진행·공유','업무 보고·진척','승인·의사결정 요청','매출·KPI 보고']],
+['거래·영업',['견적·가격 협상','계약·조건 협의','납기·물류','발주·결제·청구','클레임·불만 대응']],
+['커뮤니케이션',['인사·자기소개','사과·감사','거절·완곡한 의견','일정 조율·약속','업무 요청·확인','전화·이메일 응대','접대·식사 자리']],
+['인사·조직',['채용·면접','직원 교육·평가','근무·휴가·급여']],
+['현장 운영',['점포 오픈·공사','접객·메뉴 안내','시설·설비·위생','품질·재고 관리']],
+['기획·마케팅',['마케팅·프로모션','신제품·상품 개발','시장·경쟁 분석']],
+['전문 분야',['법무·규정·인허가','IT·시스템','전시·행사','위기·사고 대응','출장·해외 업무']],
+['소개·발표 표현',['상품·서비스 소개','프레젠테이션·PPT 표현','수식어·캐치프레이즈']]];
+const TOPICS=[].concat.apply([],TOPIC_GROUPS.map(g=>g[1]));
+const TOPIC_OF={b01:'견적·가격 협상',b02:'점포 오픈·공사',b03:'납기·물류',b04:'업무 요청·확인',b05:'업무 보고·진척',b06:'전화·이메일 응대',b07:'사과·감사',b08:'일정 조율·약속',b09:'직원 교육·평가',b10:'견적·가격 협상',b11:'거절·완곡한 의견',b12:'거절·완곡한 의견',b13:'납기·물류',b14:'접객·메뉴 안내',b15:'접객·메뉴 안내',b16:'시설·설비·위생',b17:'매출·KPI 보고',b18:'위기·사고 대응',b19:'품질·재고 관리',b20:'계약·조건 협의',b21:'업무 요청·확인',b22:'일정 조율·약속',b23:'클레임·불만 대응',b24:'회의 진행·공유'};
+const EXT2={"b01": {"ja": "できれば、項目ごとの内訳も添えてください。", "ko": "가능하면 항목별 내역도 함께 첨부해 주세요.", "key": [["内訳", "내역(항목별 세부 금액)"], ["〜ごとの", "~별"], ["添える", "첨부하다"]], "must": [["내역", ["내역"]], ["항목별", ["항목별"]]]}, "b02": {"ja": "ただし、天候によってはさらに遅れる可能性もあります。", "ko": "다만 날씨에 따라 더 늦어질 수도 있습니다.", "key": [["天候によっては", "날씨에 따라서는"], ["さらに", "더욱"], ["可能性もあります", "가능성도 있습니다"]], "must": [["天候", ["天候"]], ["さらに", ["さらに"]], ["可能性", ["可能性"]]]}, "b03": {"ja": "確定次第、すぐにお知らせします。", "ko": "확정되는 대로 바로 알려 드리겠습니다.", "key": [["〜次第", "~하는 대로"], ["お知らせします", "알려 드리겠습니다"]], "must": [["확정", ["확정"]], ["대로", ["대로"]], ["알려", ["알려"]]]}, "b04": {"ja": "内容に問題がなければ、ご返信は不要です。", "ko": "내용에 문제가 없으면 회신은 필요 없습니다.", "key": [["〜なければ", "~않으면"], ["ご返信", "회신"], ["不要", "불필요"]], "must": [["内容", ["内容"]], ["問題", ["問題"]], ["ご返信", ["ご返信"]]]}, "b05": {"ja": "状況が変わり次第、共有いたします。", "ko": "상황이 바뀌는 대로 공유드리겠습니다.", "key": [["状況", "상황"], ["〜次第", "~하는 대로"], ["共有", "공유"]], "must": [["상황", ["상황"]], ["바뀌는 대로", ["바뀌는 대로"]], ["공유", ["공유"]]]}, "b06": {"ja": "結果は、明日の午前中までにお知らせいたします。", "ko": "결과는 내일 오전 중까지 알려 드리겠습니다.", "key": [["午前中まで", "오전 중까지"], ["お知らせいたします", "알려 드리겠습니다"]], "must": [["結果", ["結果"]], ["明日", ["明日"]], ["午前中", ["午前中"]]]}, "b07": {"ja": "今後は、このようなことがないよう徹底いたします。", "ko": "앞으로는 이런 일이 없도록 철저히 하겠습니다.", "key": [["〜ないよう", "~않도록"], ["徹底", "철저"]], "must": [["앞으로", ["앞으로"]], ["없도록", ["없도록"]], ["철저히", ["철저히"]]]}, "b08": {"ja": "難しければ、他の日程でも構いませんので、お知らせください。", "ko": "어려우시면 다른 일정이라도 괜찮으니 알려 주세요.", "key": [["難しければ", "어려우시면"], ["構いません", "괜찮습니다"]], "must": [["難しければ", ["難しければ"]], ["他の日程", ["他の日程"]], ["構いません", ["構いません"]]]}, "b09": {"ja": "研修の内容は、後ほど資料でお渡しします。", "ko": "연수 내용은 나중에 자료로 전달해 드리겠습니다.", "key": [["後ほど", "나중에"], ["お渡しします", "전해 드리겠습니다"]], "must": [["연수", ["연수"]], ["나중에", ["나중에"]], ["자료", ["자료"]]]}, "b10": {"ja": "詳しい内訳は、まとまり次第ご報告いたします。", "ko": "자세한 내역은 정리되는 대로 보고드리겠습니다.", "key": [["まとまり次第", "정리되는 대로"], ["内訳", "내역"]], "must": [["内訳", ["内訳"]], ["まとまり次第", ["まとまり次第"]], ["ご報告", ["ご報告"]]]}, "b11": {"ja": "結論が出ましたら、こちらからご連絡いたします。", "ko": "결론이 나오면 저희가 연락드리겠습니다.", "key": [["結論が出る", "결론이 나오다"], ["こちらから", "저희 쪽에서"]], "must": [["결론", ["결론"]], ["연락", ["연락"]]]}, "b12": {"ja": "次の機会には、ぜひ参加したいと思っております。", "ko": "다음 기회에는 꼭 참석하고 싶습니다.", "key": [["ぜひ", "꼭"], ["参加", "참가·참석"]], "must": [["次の機会", ["次の機会"]], ["ぜひ", ["ぜひ"]], ["参加", ["参加"]]]}, "b13": {"ja": "不足や破損があれば、その場でお知らせください。", "ko": "부족하거나 파손된 것이 있으면 그 자리에서 알려 주십시오.", "key": [["その場で", "그 자리에서"], ["破損", "파손"]], "must": [["부족", ["부족"]], ["파손", ["파손"]], ["그 자리에서", ["그 자리에서"]]]}, "b14": {"ja": "ドリンクは別途ご注文いただけます。", "ko": "음료는 별도로 주문하실 수 있습니다.", "key": [["別途", "별도로"], ["ご注文いただけます", "주문하실 수 있습니다"]], "must": [["ドリンク", ["ドリンク"]], ["別途", ["別途"]], ["ご注文", ["ご注文"]]]}, "b15": {"ja": "該当の食材を使わない対応も可能です。", "ko": "해당 식재료를 사용하지 않는 대응도 가능합니다.", "key": [["該当", "해당"], ["対応", "대응"], ["可能です", "가능합니다"]], "must": [["해당", ["해당"]], ["식재료", ["식재료"]], ["가능", ["가능"]]]}, "b16": {"ja": "お客様には、事前にご案内いたします。", "ko": "고객님께는 사전에 안내해 드리겠습니다.", "key": [["事前に", "사전에"], ["ご案内", "안내"]], "must": [["お客様", ["お客様"]], ["事前に", ["事前に"]], ["ご案内", ["ご案内"]]]}, "b17": {"ja": "特に新規のお客様が好調でした。", "ko": "특히 신규 고객이 호조였습니다.", "key": [["特に", "특히"], ["好調", "호조(순조로움)"]], "must": [["특히", ["특히"]], ["신규", ["신규"]], ["호조", ["호조"]]]}, "b18": {"ja": "それまでは、暫定的な対応をいたします。", "ko": "그때까지는 임시 방편으로 대응하겠습니다.", "key": [["暫定的", "임시적"], ["それまでは", "그때까지는"]], "must": [["それまで", ["それまで"]], ["暫定的", ["暫定的"]], ["対応", ["対応"]]]}, "b19": {"ja": "ご希望の方は、お早めにお申し付けください。", "ko": "희망하시는 분은 서둘러 말씀해 주십시오.", "key": [["お申し付けください", "말씀해 주십시오(존경)"], ["お早めに", "일찍·서둘러"]], "must": [["희망", ["희망"]], ["서둘러", ["서둘러"]], ["말씀", ["말씀"]]]}, "b20": {"ja": "金額が確定しましたら、書面で確認させていただきます。", "ko": "금액이 확정되면 서면으로 확인받겠습니다.", "key": [["書面", "서면"], ["確認させていただきます", "확인하겠습니다(겸양)"]], "must": [["金額", ["金額"]], ["確定", ["確定"]], ["書面", ["書面"]]]}, "b21": {"ja": "私の方でも、再度確認しておきます。", "ko": "저도 다시 한 번 확인해 두겠습니다.", "key": [["〜ておきます", "~해 두겠습니다"], ["再度", "다시"]], "must": [["저도", ["저도"]], ["다시", ["다시"]], ["확인해 두", ["확인해 두"]]]}, "b22": {"ja": "お越しになりましたら、受付にお声がけください。", "ko": "도착하시면 접수처에 말씀해 주세요.", "key": [["お越しになる", "오시다(존경)"], ["お声がけください", "말씀해 주세요"]], "must": [["お越し", ["お越し"]], ["受付", ["受付"]], ["お声がけ", ["お声がけ"]]]}, "b23": {"ja": "ご不明な点があれば、いつでもご相談ください。", "ko": "궁금한 점이 있으면 언제든지 상담해 주세요.", "key": [["ご不明な点", "궁금한 점"], ["いつでも", "언제든지"]], "must": [["궁금한 점", ["궁금한 점"]], ["언제든지", ["언제든지"]], ["상담", ["상담"]]]}, "b24": {"ja": "詳細は、議事録をご確認ください。", "ko": "자세한 내용은 회의록을 확인해 주세요.", "key": [["詳細", "자세한 내용"], ["議事録", "회의록"]], "must": [["詳細", ["詳細"]], ["議事録", ["議事録"]], ["ご確認", ["ご確認"]]]}, "b26": {"ja": "ご承認をいただけましたら、すぐに着手いたします。", "ko": "승인해 주시면 바로 착수하겠습니다.", "key": [["着手", "착수·시작"], ["すぐに", "바로"]], "must": [["承認", ["承認"]], ["すぐに", ["すぐに"]], ["着手", ["着手"]]]}, "b27": {"ja": "ご不明な点がございましたら、経理までお問い合わせください。", "ko": "궁금한 점이 있으시면 경리팀으로 문의해 주세요.", "key": [["お問い合わせください", "문의해 주세요"], ["経理", "경리"]], "must": [["궁금한 점", ["궁금한 점"]], ["경리", ["경리"]], ["문의", ["문의"]]]}, "b28": {"ja": "ただし、一部の項目でわずかな遅れが生じております。", "ko": "다만 일부 항목에서 약간의 지연이 있습니다.", "key": [["生じております", "발생하고 있습니다"], ["わずかな", "약간의"]], "must": [["一部", ["一部"]], ["わずかな", ["わずかな"]], ["遅れ", ["遅れ"]]]}, "b29": {"ja": "本日は、率直なお話を聞かせていただければと思います。", "ko": "오늘은 솔직한 이야기를 들려주셨으면 합니다.", "key": [["〜ければと思います", "~했으면 합니다"], ["率直", "솔직"]], "must": [["솔직한", ["솔직한"]], ["들려", ["들려"]]]}, "b30": {"ja": "残りは、次回の会議で取り上げます。", "ko": "나머지는 다음 회의에서 다루겠습니다.", "key": [["取り上げる", "다루다"], ["残り", "나머지"]], "must": [["残り", ["残り"]], ["次回", ["次回"]], ["会議", ["会議"]], ["取り上げ", ["取り上げ"]]]}, "b31": {"ja": "どうぞ、ごゆっくりお召し上がりください。", "ko": "부디 천천히 드십시오.", "key": [["お召し上がりください", "드십시오(존경)"], ["ごゆっくり", "천천히"]], "must": [["천천히", ["천천히"]], ["드십시오", ["드십시오"]]]}, "b33": {"ja": "成果は、新規の登録件数で測定します。", "ko": "성과는 신규 등록 건수로 측정합니다.", "key": [["測定", "측정"], ["登録件数", "등록 건수"]], "must": [["성과", ["성과"]], ["등록 건수", ["등록 건수"]], ["측정", ["측정"]]]}, "b34": {"ja": "結果が良ければ、本格的に生産に入ります。", "ko": "결과가 좋으면 본격적으로 생산에 들어가겠습니다.", "key": [["本格的に", "본격적으로"], ["生産に入る", "생산에 들어가다"]], "must": [["結果", ["結果"]], ["本格的", ["本格的"]], ["生産", ["生産"]]]}, "b35": {"ja": "その結果を、次回の会議でご説明します。", "ko": "그 결과를 다음 회의에서 설명드리겠습니다.", "key": [["〜でご説明します", "~에서 설명드리겠습니다"], ["次回", "다음번"]], "must": [["결과", ["결과"]], ["다음 회의", ["다음 회의"]], ["설명", ["설명"]]]}, "b36": {"ja": "金額は、前回のお見積りのままでお願いできれば幸いです。", "ko": "금액은 지난번 견적 그대로 부탁드릴 수 있으면 감사하겠습니다.", "key": [["〜ままで", "~그대로"], ["お願いできれば幸いです", "부탁드릴 수 있으면 감사하겠습니다"]], "must": [["金額", ["金額"]], ["前回", ["前回"]], ["お見積り", ["お見積り"]], ["ままで", ["ままで"]]]}, "b37": {"ja": "復旧の見通しがつき次第、改めてお知らせします。", "ko": "복구 전망이 서는 대로 다시 알려 드리겠습니다.", "key": [["見通しがつく", "전망이 서다"], ["復旧", "복구"]], "must": [["복구", ["복구"]], ["전망", ["전망"]], ["알려", ["알려"]]]}, "b38": {"ja": "具体的な内容は、別途ご報告いたします。", "ko": "구체적인 내용은 별도로 보고드리겠습니다.", "key": [["具体的", "구체적"], ["別途", "별도로"]], "must": [["具体的", ["具体的"]], ["別途", ["別途"]], ["報告", ["報告"]]]}, "b39": {"ja": "ご都合のよい日時を、いくつかお知らせいただけますか。", "ko": "편하신 일시를 몇 가지 알려 주시겠어요?", "key": [["ご都合のよい", "편하신(상대 사정에 맞는)"], ["日時", "일시"]], "must": [["편하신", ["편하신"]], ["일시", ["일시"]], ["몇 가지", ["몇 가지"]]]}, "b40": {"ja": "今後も良好な関係を続けていければと思っております。", "ko": "앞으로도 좋은 관계를 이어 가고 싶습니다.", "key": [["良好な関係", "좋은 관계"], ["〜ければと思います", "~했으면 합니다"]], "must": [["今後", ["今後"]], ["良好", ["良好"]], ["関係", ["関係"]]]}, "b41": {"ja": "書類に不備がなければ、もう少し早まる可能性もあります。", "ko": "서류에 미비한 점이 없으면 조금 더 빨라질 수도 있습니다.", "key": [["不備", "미비·불비"], ["早まる", "앞당겨지다"]], "must": [["서류", ["서류"]], ["미비", ["미비"]], ["빨라질", ["빨라질"]]]}, "b42": {"ja": "午前中は別の会議があるため、難しいです。", "ko": "오전에는 다른 회의가 있어서 어렵습니다.", "key": [["〜ため", "~때문에·~라서"], ["別の", "다른"]], "must": [["午前中", ["午前中"]], ["会議", ["会議"]], ["難しい", ["難しい"]]]}, "b43": {"ja": "特に、午後の講演は立ち見が出るほどでした。", "ko": "특히 오후 강연은 서서 보는 사람이 나올 정도였습니다.", "key": [["立ち見", "서서 봄"], ["〜ほど", "~할 정도"]], "must": [["특히", ["특히"]], ["오후", ["오후"]], ["강연", ["강연"]], ["정도", ["정도"]]]}, "b44": {"ja": "メンターを決めて、毎週進捗を確認する予定です。", "ko": "멘토를 정해 매주 진척 상황을 확인할 예정입니다.", "key": [["進捗", "진척(진행 상황)"], ["メンター", "멘토"]], "must": [["メンター", ["メンター"]], ["毎週", ["毎週"]], ["進捗", ["進捗"]]]}, "b45": {"ja": "繁忙期は、調整をお願いする場合があります。", "ko": "바쁜 시기에는 조정을 부탁드릴 수 있습니다.", "key": [["繁忙期", "바쁜 시기·성수기"], ["場合があります", "경우가 있습니다"]], "must": [["바쁜 시기", ["바쁜 시기"]], ["조정", ["조정"]], ["부탁", ["부탁"]]]}, "b46": {"ja": "交換が可能かどうか、ご確認いただけますようお願いいたします。", "ko": "교환이 가능한지 확인해 주시기 바랍니다.", "key": [["〜かどうか", "~인지 아닌지"], ["ご確認いただけますよう", "확인해 주시도록"]], "must": [["交換", ["交換"]], ["可能", ["可能"]], ["ご確認", ["ご確認"]]]}, "b47": {"ja": "状況がわかり次第、速やかにご報告いたします。", "ko": "상황을 알게 되는 대로 신속히 보고드리겠습니다.", "key": [["速やかに", "신속히"], ["〜次第", "~하는 대로"]], "must": [["상황", ["상황"]], ["신속히", ["신속히"]], ["보고", ["보고"]]]}, "b48": {"ja": "残りの課題は、今月中に完了させます。", "ko": "남은 과제는 이번 달 안에 완료하겠습니다.", "key": [["今月中", "이번 달 안"], ["完了させる", "완료시키다"]], "must": [["残り", ["残り"]], ["課題", ["課題"]], ["今月中", ["今月中"]], ["完了", ["完了"]]]}, "b49": {"ja": "本日の議題は、全部で三点です。", "ko": "오늘 안건은 모두 세 가지입니다.", "key": [["議題", "안건"], ["全部で", "모두 합쳐"]], "must": [["안건", ["안건"]], ["모두", ["모두"]], ["세 가지", ["세 가지"]]]}, "b50": {"ja": "お急ぎでなければ、明後日でも構いません。", "ko": "급하지 않으시다면 모레라도 괜찮습니다.", "key": [["明後日", "모레"], ["構いません", "괜찮습니다"]], "must": [["お急ぎ", ["お急ぎ"]], ["明後日", ["明後日"]], ["構いません", ["構いません"]]]}, "b51": {"ja": "超過する場合は、事前に承認をお願いします。", "ko": "초과할 경우에는 사전에 승인을 부탁드립니다.", "key": [["超過", "초과"], ["承認", "승인"]], "must": [["초과", ["초과"]], ["사전", ["사전"]], ["승인", ["승인"]]]}, "b52": {"ja": "特に、新規取引先の売上が大きく伸びました。", "ko": "특히 신규 거래처의 매출이 크게 늘었습니다.", "key": [["取引先", "거래처"], ["伸びる", "(실적이) 늘다"]], "must": [["特に", ["特に"]], ["新規取引先", ["新規取引先"]], ["売上", ["売上"]], ["伸び", ["伸び"]]]}, "b53": {"ja": "正しい金額で、再発行をお願いいたします。", "ko": "올바른 금액으로 재발행을 부탁드립니다.", "key": [["再発行", "재발행"], ["正しい金額", "올바른 금액"]], "must": [["올바른", ["올바른"]], ["재발행", ["재발행"]], ["부탁", ["부탁"]]]}, "b54": {"ja": "ご受領後、確認のご返信をお願いいたします。", "ko": "수령하시면 확인 회신을 부탁드립니다.", "key": [["受領", "수령"], ["ご返信", "회신"]], "must": [["受領", ["受領"]], ["確認", ["確認"]], ["ご返信", ["ご返信"]]]}, "b56": {"ja": "ご不明な点がございましたら、いつでもご連絡ください。", "ko": "궁금한 점이 있으시면 언제든지 연락 주세요.", "key": [["ご不明な点", "궁금한 점"], ["いつでも", "언제든지"]], "must": [["ご不明な点", ["ご不明な点"]], ["いつでも", ["いつでも"]], ["ご連絡", ["ご連絡"]]]}, "b57": {"ja": "資料は、お席に置いてございます。", "ko": "자료는 자리에 놓여 있습니다.", "key": [["お席", "자리(존경)"], ["置いてございます", "놓여 있습니다"]], "must": [["자료", ["자료"]], ["자리", ["자리"]], ["놓여", ["놓여"]]]}, "b58": {"ja": "それでは、皆様のご健康とご発展を願って、杯を挙げたいと思います。", "ko": "그럼 여러분의 건강과 발전을 기원하며 잔을 들겠습니다.", "key": [["杯を挙げる", "잔을 들다"], ["ご発展", "발전"]], "must": [["皆様", ["皆様"]], ["ご健康", ["ご健康"]], ["ご発展", ["ご発展"]], ["杯", ["杯"]]]}, "b59": {"ja": "また、入社後にやってみたいことがあれば教えてください。", "ko": "또한 입사 후에 해 보고 싶은 일이 있으면 알려 주세요.", "key": [["入社後", "입사 후"], ["やってみたい", "해 보고 싶다"]], "must": [["입사 후", ["입사 후"]], ["해 보고 싶은", ["해 보고 싶은"]], ["알려", ["알려"]]]}, "b60": {"ja": "その経験が今後どのように活かせるかも、お聞かせください。", "ko": "그 경험을 앞으로 어떻게 살릴 수 있을지도 들려주세요.", "key": [["活かす", "살리다·활용하다"], ["お聞かせください", "들려주세요"]], "must": [["経験", ["経験"]], ["今後", ["今後"]], ["活かせる", ["活かせる"]], ["お聞かせ", ["お聞かせ"]]]}, "b61": {"ja": "業務は、前日までに引き継いでおきます。", "ko": "업무는 전날까지 인수인계해 두겠습니다.", "key": [["引き継ぐ", "인수인계하다"], ["前日まで", "전날까지"]], "must": [["업무", ["업무"]], ["전날", ["전날"]], ["인수인계", ["인수인계"]]]}, "b62": {"ja": "具体的な金額は、給与明細でご確認いただけます。", "ko": "구체적인 금액은 급여 명세서에서 확인하실 수 있습니다.", "key": [["給与明細", "급여 명세서"], ["具体的な金額", "구체적인 금액"]], "must": [["具体的", ["具体的"]], ["金額", ["金額"]], ["給与明細", ["給与明細"]]]}, "b63": {"ja": "工事中は、一部のエリアが立ち入り禁止となります。", "ko": "공사 중에는 일부 구역이 출입 금지가 됩니다.", "key": [["立ち入り禁止", "출입 금지"], ["エリア", "구역"]], "must": [["공사 중", ["공사 중"]], ["일부", ["일부"]], ["출입 금지", ["출입 금지"]]]}, "b64": {"ja": "作業時間は、午前九時から午後六時までです。", "ko": "작업 시간은 오전 9시부터 오후 6시까지입니다.", "key": [["〜から〜まで", "~부터 ~까지"], ["作業時間", "작업 시간"]], "must": [["作業時間", ["作業時間"]], ["午前", ["午前"]], ["午後", ["午後"]]]}, "b65": {"ja": "ご予算と優先順位を、まずお聞かせください。", "ko": "예산과 우선순위를 먼저 말씀해 주세요.", "key": [["優先順位", "우선순위"], ["まず", "먼저"]], "must": [["예산", ["예산"]], ["우선순위", ["우선순위"]], ["먼저", ["먼저"]]]}, "b67": {"ja": "復旧までは、扇風機をご利用ください。", "ko": "복구되기 전까지는 선풍기를 이용해 주세요.", "key": [["復旧", "복구"], ["扇風機", "선풍기"]], "must": [["복구", ["복구"]], ["선풍기", ["선풍기"]], ["이용", ["이용"]]]}, "b69": {"ja": "効果は、毎週数字で確認します。", "ko": "효과는 매주 수치로 확인합니다.", "key": [["数字", "수치·숫자"], ["毎週", "매주"]], "must": [["효과", ["효과"]], ["매주", ["매주"]], ["수치", ["수치"]]]}, "b70": {"ja": "結果が良ければ、予算を増やすことも検討いたします。", "ko": "결과가 좋으면 예산을 늘리는 것도 검토하겠습니다.", "key": [["検討いたします", "검토하겠습니다"], ["予算を増やす", "예산을 늘리다"]], "must": [["結果", ["結果"]], ["予算", ["予算"]], ["増やす", ["増やす"]], ["検討", ["検討"]]]}, "b71": {"ja": "その結果を踏まえて、最終仕様を決定します。", "ko": "그 결과를 바탕으로 최종 사양을 결정합니다.", "key": [["踏まえて", "~을 바탕으로·감안하여"], ["最終仕様", "최종 사양"]], "must": [["결과", ["결과"]], ["최종 사양", ["최종 사양"]], ["결정", ["결정"]]]}, "b72": {"ja": "変更がある場合は、すぐにお知らせします。", "ko": "변경이 있는 경우에는 바로 알려 드리겠습니다.", "key": [["変更", "변경"], ["すぐに", "바로"]], "must": [["変更", ["変更"]], ["すぐに", ["すぐに"]], ["お知らせ", ["お知らせ"]]]}, "b73": {"ja": "具体的な案は、来週の会議で提示します。", "ko": "구체적인 안은 다음 주 회의에서 제시하겠습니다.", "key": [["提示", "제시"], ["案", "안"]], "must": [["구체적인 안", ["구체적인 안"]], ["다음 주", ["다음 주"]], ["제시", ["제시"]]]}, "b74": {"ja": "ただし、景気の状況によって変わる可能性があります。", "ko": "다만 경기 상황에 따라 달라질 가능성이 있습니다.", "key": [["景気", "경기"], ["〜によって", "~에 따라"]], "must": [["景気", ["景気"]], ["状況", ["状況"]], ["変わる", ["変わる"]], ["可能性", ["可能性"]]]}, "b75": {"ja": "ご不明な点は、総務部にご確認ください。", "ko": "궁금한 점은 총무부에 확인해 주세요.", "key": [["総務部", "총무부"], ["ご確認ください", "확인해 주세요"]], "must": [["궁금한 점", ["궁금한 점"]], ["총무부", ["총무부"]], ["확인", ["확인"]]]}, "b76": {"ja": "修正が必要な場合は、先方に先にお伝えします。", "ko": "수정이 필요한 경우에는 상대방에게 먼저 전달하겠습니다.", "key": [["先方", "상대방(거래처)"], ["お伝えします", "전해 드리겠습니다"]], "must": [["修正", ["修正"]], ["先方", ["先方"]], ["お伝え", ["お伝え"]]]}, "b77": {"ja": "お急ぎの案件は、担当までご連絡ください。", "ko": "급한 건은 담당자에게 연락해 주세요.", "key": [["お急ぎの案件", "급한 건"], ["担当", "담당(자)"]], "must": [["급한 건", ["급한 건"]], ["담당자", ["담당자"]], ["연락", ["연락"]]]}, "b78": {"ja": "初回ログイン時に、新しいパスワードを設定する必要があります。", "ko": "처음 로그인할 때 새 비밀번호를 설정해야 합니다.", "key": [["初回", "처음·첫 회"], ["〜する必要があります", "~해야 합니다"]], "must": [["初回", ["初回"]], ["新しい", ["新しい"]], ["パスワード", ["パスワード"]], ["設定", ["設定"]]]}, "b79": {"ja": "そのため、受付を二か所に増やす予定です。", "ko": "그래서 접수처를 두 곳으로 늘릴 예정입니다.", "key": [["そのため", "그래서·그 때문에"], ["受付", "접수처"]], "must": [["그래서", ["그래서"]], ["접수처", ["접수처"]], ["두 곳", ["두 곳"]], ["늘릴", ["늘릴"]]]}, "b80": {"ja": "電気とインターネットは、事前にお申し込みください。", "ko": "전기와 인터넷은 사전에 신청해 주세요.", "key": [["お申し込み", "신청"], ["事前に", "사전에"]], "must": [["電気", ["電気"]], ["インターネット", ["インターネット"]], ["事前", ["事前"]], ["お申し込み", ["お申し込み"]]]}, "b81": {"ja": "現時点では、被害は確認されておりません。", "ko": "현 시점에서는 피해가 확인되지 않았습니다.", "key": [["現時点", "현 시점"], ["確認されておりません", "확인되지 않았습니다"]], "must": [["현 시점", ["현 시점"]], ["피해", ["피해"]], ["확인되지 않았", ["확인되지 않았"]]]}, "b82": {"ja": "関係部署とも、事前に共有しておきます。", "ko": "관련 부서와도 사전에 공유해 두겠습니다.", "key": [["関係部署", "관련 부서"], ["共有しておく", "공유해 두다"]], "must": [["関係部署", ["関係部署"]], ["事前", ["事前"]], ["共有", ["共有"]]]}, "b83": {"ja": "現地では、取引先との打ち合わせが二件あります。", "ko": "현지에서는 거래처와의 미팅이 두 건 있습니다.", "key": [["打ち合わせ", "미팅·협의"], ["現地", "현지"]], "must": [["현지", ["현지"]], ["거래처", ["거래처"]], ["미팅", ["미팅"]], ["두 건", ["두 건"]]]}, "b84": {"ja": "出発前に、日程をもう一度共有いたします。", "ko": "출발 전에 일정을 한 번 더 공유드리겠습니다.", "key": [["出発前", "출발 전"], ["もう一度", "한 번 더"]], "must": [["出発前", ["出発前"]], ["日程", ["日程"]], ["もう一度", ["もう一度"]], ["共有", ["共有"]]]}, "b85": {"ja": "出発前に、概算の金額を申請してください。", "ko": "출발 전에 대략적인 금액을 신청해 주세요.", "key": [["概算", "대략적인 계산·개산"], ["申請", "신청"]], "must": [["출발 전", ["출발 전"]], ["대략적인", ["대략적인"]], ["금액", ["금액"]], ["신청", ["신청"]]]}, "b86": {"ja": "残りの作業は、来週中に完了する見込みです。", "ko": "남은 작업은 다음 주 안에 완료될 전망입니다.", "key": [["見込みです", "전망입니다"], ["来週中", "다음 주 중"]], "must": [["残り", ["残り"]], ["作業", ["作業"]], ["来週中", ["来週中"]], ["完了", ["完了"]]]}, "b87": {"ja": "変更点は、赤字で示しております。", "ko": "변경 사항은 빨간 글씨로 표시했습니다.", "key": [["赤字", "빨간 글씨·적자"], ["示す", "나타내다"]], "must": [["변경 사항", ["변경 사항"]], ["빨간 글씨", ["빨간 글씨"]], ["표시", ["표시"]]]}, "b88": {"ja": "解約をご希望の場合は、満了の一か月前までにお知らせいただく必要があります。", "ko": "해지를 원하시는 경우에는 만료 한 달 전까지 알려 주셔야 합니다.", "key": [["解約", "해약·해지"], ["満了", "만료"]], "must": [["解約", ["解約"]], ["満了", ["満了"]], ["一か月前", ["一か月前"]], ["お知らせ", ["お知らせ"]]]}, "b89": {"ja": "難しい場合は、部分的な納品でも構いません。", "ko": "어려운 경우에는 부분 납품이라도 괜찮습니다.", "key": [["部分的な", "부분적인"], ["構いません", "괜찮습니다"]], "must": [["어려운 경우", ["어려운 경우"]], ["부분", ["부분"]], ["납품", ["납품"]], ["괜찮", ["괜찮"]]]}, "b91": {"ja": "おかげさまで、無事に間に合いました。", "ko": "덕분에 무사히 시간에 맞출 수 있었습니다.", "key": [["おかげさまで", "덕분에"], ["間に合う", "시간에 맞추다"]], "must": [["덕분에", ["덕분에"]], ["무사히", ["무사히"]], ["시간에 맞출", ["시간에 맞출"]]]}, "b92": {"ja": "代わりに、他に方法がないか、一緒に探してみます。", "ko": "대신 다른 방법이 없는지 함께 찾아보겠습니다.", "key": [["代わりに", "대신"], ["探してみます", "찾아보겠습니다"]], "must": [["代わりに", ["代わりに"]], ["他に", ["他に"]], ["方法", ["方法"]], ["一緒に", ["一緒に"]]]}, "b93": {"ja": "こちらで内容を確認し、問題なければ承認いたします。", "ko": "저희가 내용을 확인하고 문제가 없으면 승인하겠습니다.", "key": [["問題なければ", "문제가 없으면"], ["承認", "승인"]], "must": [["내용", ["내용"]], ["문제가 없으면", ["문제가 없으면"]], ["승인", ["승인"]]]}, "b95": {"ja": "初日は、会社の概要と基本ルールを説明します。", "ko": "첫날은 회사 개요와 기본 규칙을 설명합니다.", "key": [["概要", "개요"], ["初日", "첫날"]], "must": [["첫날", ["첫날"]], ["개요", ["개요"]], ["기본 규칙", ["기본 규칙"]], ["설명", ["설명"]]]}, "b96": {"ja": "原因が分かり次第、すぐに修正いたします。", "ko": "원인을 알게 되는 대로 바로 수정하겠습니다.", "key": [["分かり次第", "알게 되는 대로"], ["修正", "수정"]], "must": [["原因", ["原因"]], ["分かり次第", ["分かり次第"]], ["修正", ["修正"]]]}, "b97": {"ja": "内容に修正がある場合は、明日までにご連絡ください。", "ko": "내용에 수정할 부분이 있으면 내일까지 연락해 주세요.", "key": [["〜までに", "~까지(기한)"], ["修正", "수정"]], "must": [["수정", ["수정"]], ["내일까지", ["내일까지"]], ["연락", ["연락"]]]}, "b98": {"ja": "もし発生する場合は、金額と算定方法も教えてください。", "ko": "만약 발생한다면 금액과 산정 방법도 알려 주세요.", "key": [["算定方法", "산정 방법"], ["発生する場合", "발생하는 경우"]], "must": [["もし", ["もし"]], ["金額", ["金額"]], ["算定方法", ["算定方法"]]]}, "b99": {"ja": "一点目は納期の遅れ、二点目は品質のばらつきです。", "ko": "첫 번째는 납기 지연, 두 번째는 품질 편차입니다.", "key": [["ばらつき", "편차·들쭉날쭉함"], ["一点目", "첫 번째"]], "must": [["첫 번째", ["첫 번째"]], ["납기 지연", ["납기 지연"]], ["두 번째", ["두 번째"]], ["품질 편차", ["품질 편차"]]]}, "b100": {"ja": "含まれていない場合は、別途の金額もお知らせいただけますと幸いです。", "ko": "포함되어 있지 않다면 별도 금액도 알려 주시면 감사하겠습니다.", "key": [["別途", "별도"], ["幸いです", "감사하겠습니다(정중)"]], "must": [["含まれていない", ["含まれていない"]], ["別途", ["別途"]], ["金額", ["金額"]], ["幸い", ["幸い"]]]}, "b101": {"ja": "初めての方でも、すぐにお使いいただけます。", "ko": "처음 쓰시는 분도 바로 사용하실 수 있습니다.", "key": [["初めての方", "처음이신 분"], ["お使いいただけます", "사용하실 수 있습니다"]], "must": [["처음", ["처음"]], ["바로", ["바로"]], ["사용", ["사용"]]]}, "b102": {"ja": "重さは約五百グラムで、持ち運びにも便利です。", "ko": "무게는 약 500그램이라 휴대하기에도 편리합니다.", "key": [["持ち運び", "휴대·들고 다님"], ["重さ", "무게"]], "must": [["重さ", ["重さ"]], ["持ち運び", ["持ち運び"]], ["便利", ["便利"]]]}, "b104": {"ja": "さらに、作業時間も半分に短縮されます。", "ko": "또한 작업 시간도 절반으로 단축됩니다.", "key": [["短縮", "단축"], ["半分", "절반"]], "must": [["さらに", ["さらに"]], ["作業時間", ["作業時間"]], ["半分", ["半分"]], ["短縮", ["短縮"]]]}, "b105": {"ja": "まずは、お気軽にお試しください。", "ko": "우선 부담 없이 사용해 보세요.", "key": [["お気軽に", "부담 없이·편하게"], ["お試しください", "시험해 보세요"]], "must": [["우선", ["우선"]], ["부담 없이", ["부담 없이"]], ["사용해 보세요", ["사용해 보세요"]]]}, "b106": {"ja": "その違いは、実際にお使いいただければお分かりいただけます。", "ko": "그 차이는 직접 써 보시면 아실 수 있습니다.", "key": [["実際に", "실제로·직접"], ["お分かりいただけます", "아실 수 있습니다"]], "must": [["違い", ["違い"]], ["実際に", ["実際に"]], ["お使い", ["お使い"]], ["お分かり", ["お分かり"]]]}, "b107": {"ja": "その分、ランニングコストも大幅に下がります。", "ko": "그만큼 운영 비용도 크게 줄어듭니다.", "key": [["その分", "그만큼"], ["大幅に", "대폭"]], "must": [["그만큼", ["그만큼"]], ["운영 비용", ["운영 비용"]], ["크게", ["크게"]], ["줄어", ["줄어"]]]}, "b108": {"ja": "今後も、ご意見を反映しながら、改善を続けてまいります。", "ko": "앞으로도 의견을 반영하면서 개선을 이어 가겠습니다.", "key": [["改善を続ける", "개선을 이어 가다"], ["〜ながら", "~하면서"]], "must": [["今後", ["今後"]], ["ご意見", ["ご意見"]], ["改善", ["改善"]], ["続けて", ["続けて"]]]}, "b109": {"ja": "特に、第三四半期の伸びが顕著です。", "ko": "특히 3분기의 성장이 두드러집니다.", "key": [["顕著", "현저·두드러진"], ["第三四半期", "3분기"]], "must": [["특히", ["특히"]], ["3분기", ["3분기"]], ["성장", ["성장"]], ["두드러", ["두드러"]]]}, "b110": {"ja": "ご質問がございましたら、お気軽にお申し付けください。", "ko": "질문이 있으시면 편하게 말씀해 주세요.", "key": [["お気軽に", "편하게"], ["お申し付けください", "말씀해 주세요"]], "must": [["ご質問", ["ご質問"]], ["お気軽", ["お気軽"]], ["お申し付け", ["お申し付け"]]]}, "b111": {"ja": "毎日使うものだから、心地よさにこだわりました。", "ko": "매일 쓰는 것이기에 편안함에 신경 썼습니다.", "key": [["こだわる", "신경 쓰다·고집하다"], ["心地よさ", "편안함"]], "must": [["매일", ["매일"]], ["편안함", ["편안함"]], ["신경 썼", ["신경 썼"]]]}, "b112": {"ja": "何を減らし、何を残すかを、一緒に設計します。", "ko": "무엇을 줄이고 무엇을 남길지 함께 설계합니다.", "key": [["何を減らし", "무엇을 줄이고"], ["設計", "설계"]], "must": [["何を減らし", ["何を減らし"]], ["何を残す", ["何を残す"]], ["一緒に", ["一緒に"]], ["設計", ["設計"]]]}, "b113": {"ja": "お客様の声をもとに、改良を重ねてきました。", "ko": "고객의 목소리를 바탕으로 개량을 거듭해 왔습니다.", "key": [["改良を重ねる", "개량을 거듭하다"], ["〜をもとに", "~을 바탕으로"]], "must": [["고객의 목소리", ["고객의 목소리"]], ["바탕으로", ["바탕으로"]], ["개량", ["개량"]], ["거듭", ["거듭"]]]}, "b114": {"ja": "月単位でご契約いただけるので、ご負担が少なくて済みます。", "ko": "월 단위로 계약하실 수 있어서 부담이 적습니다.", "key": [["月単位", "월 단위"], ["負担が少なくて済む", "부담이 적게 들다"]], "must": [["月単位", ["月単位"]], ["ご契約", ["ご契約"]], ["負担", ["負担"]]]}, "b115": {"ja": "具体的な進め方は、次のスライドでご説明します。", "ko": "구체적인 진행 방식은 다음 슬라이드에서 설명드리겠습니다.", "key": [["進め方", "진행 방식"], ["ご説明します", "설명드리겠습니다"]], "must": [["구체적인", ["구체적인"]], ["진행 방식", ["진행 방식"]], ["다음 슬라이드", ["다음 슬라이드"]], ["설명", ["설명"]]]}, "b116": {"ja": "一つずつ、順番にご説明いたします。", "ko": "하나씩 순서대로 설명드리겠습니다.", "key": [["順番に", "순서대로"], ["一つずつ", "하나씩"]], "must": [["一つずつ", ["一つずつ"]], ["順番に", ["順番に"]], ["ご説明", ["ご説明"]]]}, "b117": {"ja": "どなたにも使いやすいよう、細部まで配慮しました。", "ko": "누구나 쓰기 쉽도록 세부 사항까지 배려했습니다.", "key": [["細部", "세부"], ["配慮", "배려"]], "must": [["누구나", ["누구나"]], ["세부", ["세부"]], ["배려", ["배려"]]]}, "b118": {"ja": "素材には、温もりのある木を使用しています。", "ko": "소재로는 온기가 느껴지는 나무를 사용했습니다.", "key": [["温もり", "온기"], ["素材", "소재"]], "must": [["素材", ["素材"]], ["温もり", ["温もり"]], ["木", ["木"]], ["使用", ["使用"]]]}, "b119": {"ja": "万が一のトラブルにも、迅速に対応いたします。", "ko": "만일의 문제에도 신속하게 대응하겠습니다.", "key": [["万が一", "만일·혹시라도"], ["迅速に", "신속하게"]], "must": [["만일", ["만일"]], ["문제", ["문제"]], ["신속", ["신속"]], ["대응", ["대응"]]]}, "b120": {"ja": "操作方法は、画面の案内に沿って進めていただくだけです。", "ko": "조작 방법은 화면의 안내를 따라 하시기만 하면 됩니다.", "key": [["〜に沿って", "~에 따라"], ["〜だけです", "~하기만 하면 됩니다"]], "must": [["操作方法", ["操作方法"]], ["画面", ["画面"]], ["案内", ["案内"]], ["沿って", ["沿って"]]]}, "b121": {"ja": "本日は、三つのテーマについてご紹介いたします。", "ko": "오늘은 세 가지 주제에 대해 소개해 드리겠습니다.", "key": [["テーマ", "주제"], ["ご紹介いたします", "소개해 드리겠습니다"]], "must": [["오늘", ["오늘"]], ["세 가지", ["세 가지"]], ["주제", ["주제"]], ["소개", ["소개"]]]}, "b122": {"ja": "時間の都合上、すべてのご質問にお答えできない場合がございます。", "ko": "시간 관계상 모든 질문에 답변드리지 못할 수 있습니다.", "key": [["時間の都合上", "시간 관계상"], ["お答えできない", "답변드릴 수 없다"]], "must": [["時間の都合上", ["時間の都合上"]], ["すべて", ["すべて"]], ["ご質問", ["ご質問"]], ["お答え", ["お答え"]]]}, "b123": {"ja": "どうぞ、末永くお付き合いください。", "ko": "부디 오래도록 함께해 주십시오.", "key": [["末永く", "오래도록"], ["お付き合い", "교제·거래 관계"]], "must": [["부디", ["부디"]], ["오래도록", ["오래도록"]], ["함께", ["함께"]]]}, "b124": {"ja": "これからも、お客様のご期待にお応えしてまいります。", "ko": "앞으로도 고객님의 기대에 부응해 나가겠습니다.", "key": [["お応えする", "부응하다"], ["〜てまいります", "~해 나가겠습니다"]], "must": [["これからも", ["これからも"]], ["お客様", ["お客様"]], ["ご期待", ["ご期待"]], ["お応え", ["お応え"]]]}};
+BANK.forEach(s=>{const e=EXT2[s.id];if(!e)return;
+  if(s.lang==='ja'){s.src+=e.ja;s.ref+=' '+e.ko;}else{s.src+=' '+e.ko;s.ref+=e.ja;}
+  s.key=s.key.concat(e.key);s.must=s.must.concat(e.must);});
+BANK.forEach(s=>{s.topic=s.topic||TOPIC_OF[s.id]||'';});
+
+/* ---------- 기본값 · 저장 ---------- */
+const KEY='kotoba-daily-interp-v1';
+const DEF=()=>({v:1,settings:{limit:15,basis:'start',rate:1,slow:0.7,perDay:4,topics:[],stt:true,rec:true,endpoint:'',token:'',oaKey:'',oaModel:''},progress:{},days:{},custom:[]});
+let storageOk=true;
+function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){storageOk=false;}return null;}
+let S=load()||DEF();
+S.settings=Object.assign(DEF().settings,S.settings||{});S.progress=S.progress||{};S.days=S.days||{};S.custom=S.custom||[];
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){storageOk=false;}}
+try{localStorage.setItem(KEY+'-t','1');localStorage.removeItem(KEY+'-t');}catch(e){storageOk=false;}
+
+/* ---------- 유틸 ---------- */
+const $=(s,r)=>(r||document).querySelector(s);
+function h(tag,attrs){
+  const el=document.createElement(tag);
+  if(attrs)for(const k in attrs){const v=attrs[k];if(v==null||v===false)continue;
+    if(k==='class')el.className=v;else if(k==='text')el.textContent=v;
+    else if(k.slice(0,2)==='on'&&typeof v==='function')el.addEventListener(k.slice(2),v);
+    else if(v===true)el.setAttribute(k,'');else el.setAttribute(k,v);}
+  for(let i=2;i<arguments.length;i++){const c=arguments[i];
+    (Array.isArray(c)?c:[c]).forEach(x=>{if(x==null||x===false)return;el.append(x.nodeType?x:document.createTextNode(String(x)));});}
+  return el;
+}
+function svg(markup){const t=document.createElement('template');t.innerHTML=markup;return t.content.firstElementChild;}
+const ICON={
+  play:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>',
+  wave:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  stop:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>'
+};
+const pad2=n=>String(n).padStart(2,'0');
+function dstr(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+const todayStr=()=>dstr(new Date());
+function fmtDate(d){try{return d.toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});}catch(e){return dstr(d);}}
+const all=()=>BANK.concat(S.custom);
+const byId=id=>all().find(s=>s.id===id);
+const other=l=>l==='ja'?'ko':'ja';
+const LN={ja:'일본어',ko:'한국어'};
+function chip(lang){return h('span',{class:'chip '+lang,text:(lang==='ja'?'JA → KO':'KO → JA')});}
+let toastT=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;},2800);}
+async function copyText(text,ta){try{await navigator.clipboard.writeText(text);toast('복사했어요');}catch(e){if(ta){ta.focus();ta.select();}toast('길게 눌러 직접 복사해 주세요');}}
+const nrm=x=>String(x||'').replace(/[\s、。,.!?！？「」『』"'“”]/g,'').toLowerCase();
+function hitsFor(s,text){const t=nrm(text);const rows=(s.must||[]).map(m=>({label:m[0],any:m[1],hit:m[1].some(a=>t.includes(nrm(a)))}));return{rows,ok:rows.filter(r=>r.hit).length,total:rows.length};}
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+
+/* ---------- 오늘의 계획 (어제 복습 → 새 문장) ---------- */
+function lastNewLang(){
+  const ds=Object.keys(S.days).sort();
+  for(let i=ds.length-1;i>=0;i--){const n=S.days[ds[i]].newIds;if(n&&n.length){const s=byId(n[n.length-1]);if(s)return s.lang;}}
+  return null;
+}
+let lastFell=false;
+function takeOne(arr){
+  if(!arr.length)return null;
+  const ci=arr.findIndex(x=>!/^b\d\d$/.test(x.id));
+  const i=ci>=0?ci:Math.floor(Math.random()*arr.length);
+  return arr.splice(i,1)[0];
+}
+function pickNew(n,start){
+  const t=todayStr(),pool={ja:[],ko:[]},rest={ja:[],ko:[]};
+  const sel=(S.settings.topics||[]).filter(x=>TOPICS.includes(x));
+  lastFell=false;
+  S.custom.concat(BANK).forEach(s=>{const p=S.progress[s.id];if(p&&p.introDay)return;
+    ((!sel.length||!s.topic||sel.includes(s.topic))?pool:rest)[s.lang].push(s);});
+  const out=[];let want=start;
+  for(let i=0;i<n;i++){
+    let s=takeOne(pool[want]);
+    if(!s){s=takeOne(pool[other(want)]);if(s)want=other(want);}
+    if(!s){s=takeOne(rest[want]);if(!s){want=other(want);s=takeOne(rest[want]);}if(s)lastFell=true;}
+    if(!s)break;
+    out.push(s.id);
+    const p=S.progress[s.id]=S.progress[s.id]||{done:[],attempts:[],memo:''};
+    p.introDay=t;want=other(want);
+  }
+  return out;
+}
+function ensureToday(){
+  const t=todayStr();
+  if(S.days[t])return S.days[t];
+  const prevs=Object.keys(S.days).filter(d=>d<t).sort();
+  const prev=prevs.length?S.days[prevs[prevs.length-1]]:null;
+  let review=[];
+  if(prev){
+    review=prev.newIds.filter(id=>byId(id));
+    Object.keys(S.progress).filter(id=>S.progress[id].again&&!review.includes(id)&&byId(id)).slice(0,2).forEach(id=>review.push(id));
+  }
+  const ll=lastNewLang();
+  const start=ll?other(ll):'ja';
+  const day={reviewIds:review,newIds:pickNew(S.settings.perDay,start),doneIds:[]};
+  if(lastFell)day.note='선택한 주제의 문장이 부족해 다른 주제 문장이 섞였어요.';
+  S.days[t]=day;save();return day;
+}
+function redrawNew(){
+  const day=ensureToday();
+  const keep=day.newIds.filter(id=>{const p=S.progress[id];return (day.doneIds||[]).includes(id)||(p&&p.attempts&&p.attempts.length);});
+  const drop=day.newIds.filter(id=>!keep.includes(id));
+  if(!drop.length){toast('아직 풀지 않은 새 문장이 없어요');return;}
+  drop.forEach(id=>{if(S.progress[id])delete S.progress[id].introDay;});
+  const first=keep.length?other(byId(keep[keep.length-1]).lang):(lastNewLang()&&!keep.length?'ja':'ja');
+  const ids=pickNew(drop.length,keep.length?first:(Math.random()<.5?'ja':'ko'));
+  day.newIds=keep.concat(ids);save();toast('새 문장을 다시 뽑았어요');render();
+}
+function addOneNew(){
+  const day=ensureToday();
+  const last=day.newIds.length?byId(day.newIds[day.newIds.length-1]):null;
+  const ids=pickNew(1,last?other(last.lang):(lastNewLang()?other(lastNewLang()):'ja'));
+  if(!ids.length){toast('남은 새 문장이 없어요. 문장 추가 탭에서 만들 수 있어요.');return;}
+  day.newIds.push(ids[0]);save();if(lastFell)toast('선택한 주제 문장이 다 떨어져 다른 주제에서 가져왔어요.');render();
+}
+function addMoreNew(k){
+  const day=ensureToday();let n=0;
+  for(let i=0;i<k;i++){
+    const last=day.newIds.length?byId(day.newIds[day.newIds.length-1]):null;
+    const ids=pickNew(1,last?other(last.lang):(lastNewLang()?other(lastNewLang()):'ja'));
+    if(!ids.length)break;day.newIds.push(ids[0]);n++;
+  }
+  save();toast(n?n+'문장을 추가했어요':'남은 새 문장이 없어요. 문장 추가 탭에서 만들 수 있어요.');render();
+}
+function streak(){
+  const set=new Set(Object.keys(S.days).filter(d=>S.days[d].doneIds&&S.days[d].doneIds.length));
+  let n=0;const d=new Date();
+  if(!set.has(dstr(d)))d.setDate(d.getDate()-1);
+  while(set.has(dstr(d))){n++;d.setDate(d.getDate()-1);}
+  return n;
+}
+
+/* ---------- 음성 합성 ---------- */
+let voices=[];
+function loadVoices(){try{voices=speechSynthesis.getVoices()||[];}catch(e){voices=[];}}
+if('speechSynthesis' in window){loadVoices();try{speechSynthesis.addEventListener('voiceschanged',loadVoices);}catch(e){}}
+function voiceFor(lang){
+  const m=voices.filter(v=>v.lang&&v.lang.toLowerCase().replace('_','-').indexOf(lang)===0);
+  return m.find(v=>v.localService)||m[0]||null;
+}
+function speak(text,lang,rate){
+  return new Promise((resolve,reject)=>{
+    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){reject(new Error('unsupported'));return;}
+    try{speechSynthesis.cancel();}catch(e){}
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=lang==='ja'?'ja-JP':'ko-KR';
+    const v=voiceFor(lang);if(v)u.voice=v;
+    u.rate=rate||1;
+    let settled=false,guard=null;
+    const fin=(val,err)=>{if(settled)return;settled=true;clearTimeout(guard);err?reject(err):resolve(val);};
+    guard=setTimeout(()=>fin(true),Math.max(4000,text.length*400/(rate||1)+3000));
+    u.onend=()=>fin(true);
+    u.onerror=e=>{const c=e&&e.error;(c==='canceled'||c==='interrupted')?fin(false):fin(null,new Error(c||'tts'));};
+    speechSynthesis.speak(u);
+  });
+}
+
+/* ---------- 화면 전환 ---------- */
+let view='today';
+const TABS=[['today','오늘'],['history','지난 학습'],['library','누적'],['add','문장 추가'],['settings','설정']];
+function go(v){
+  if(view==='practice'&&v!=='practice')cleanupPractice();
+  view=v;render();window.scrollTo(0,0);
+}
+function render(){
+  const root=$('#app');root.replaceChildren();
+  const inP=view==='practice';
+  $('#tabs').hidden=inP;
+  const tin=$('#tabs-in');tin.replaceChildren();
+  TABS.forEach(t=>tin.append(h('button',{class:'tab',type:'button','aria-current':view===t[0]?'page':null,onclick:()=>go(t[0]),text:t[1]})));
+  const fn={today:viewToday,history:viewHistory,library:viewLibrary,add:viewAdd,settings:viewSettings,practice:viewPractice}[view];
+  root.append(fn());
+}
+
+/* ---------- 오늘 ---------- */
+function sentRow(id,isReview,day){
+  const s=byId(id);if(!s)return null;
+  const done=day.doneIds.includes(id);
+  return h('div',{class:'row'+(done?' is-done':'')},
+    h('div',{class:'row-main'},
+      h('div',{class:'meta'},chip(s.lang),h('span',{class:'tag',text:isReview?'복습':'신규'}),s.topic?h('span',{class:'tag',text:s.topic}):null,done&&h('span',{class:'tag ok',text:'완료'})),
+      done?h('div',{class:'sent sm',lang:s.lang,text:s.src}):h('div',{class:'hidden-text',text:'듣고 '+LN[other(s.lang)]+'로 통역 · 원문은 숨김'})),
+    h('button',{class:'btn sm'+(done?' ghost':''),type:'button',onclick:()=>startPractice(id),text:done?'다시':'연습'}));
+}
+function rowsBox(ids,isReview,day){
+  const ok=ids.filter(i=>byId(i));
+  const todo=ok.filter(i=>!day.doneIds.includes(i)),dn=ok.filter(i=>day.doneIds.includes(i));
+  return h('div',null,todo.map(id=>sentRow(id,isReview,day)),
+    dn.length?h('details',{class:'donebox'},h('summary',{class:'help',style:'cursor:pointer;padding:8px 2px',text:'완료한 문장 '+dn.length+'개 보기'}),h('div',null,dn.map(id=>sentRow(id,isReview,day)))):null,
+    (!todo.length&&dn.length)?h('p',{class:'help',text:'모두 끝냈어요.'}):null);
+}
+function viewToday(){
+  const day=ensureToday();
+  const ids=day.reviewIds.concat(day.newIds).filter(i=>byId(i));
+  const done=ids.filter(id=>day.doneIds.includes(id)).length;
+  const seen=Object.keys(S.progress).filter(id=>S.progress[id].introDay&&byId(id)).length;
+  const next=ids.find(id=>!day.doneIds.includes(id));
+  const unseen=all().filter(s=>!(S.progress[s.id]&&S.progress[s.id].introDay)).length;
+  const root=h('div',{class:'stack'});
+  root.append(h('div',{class:'top'},h('div',null,h('h1',{text:'Kotoba Daily'}),h('div',{class:'sub',text:fmtDate(new Date())+' · 한일 통역 연습'}))));
+  root.append(h('div',{class:'stats'},
+    h('div',null,h('b',{text:done+'/'+ids.length}),h('span',{text:'오늘'})),
+    h('div',null,h('b',{text:String(ids.length-done)}),h('span',{text:'남은 문제'})),
+    h('div',null,h('b',{text:String(streak())}),h('span',{text:'연속 일수'}))));
+  root.append(h('div',{class:'bar'},h('span',{style:'width:'+(ids.length?Math.round(done/ids.length*100):0)+'%'})));
+  if(!ids.length){
+    root.append(h('div',{class:'empty'},h('p',{text:'오늘 연습할 문장이 없어요.'}),h('p',{class:'sub',text:'문장 추가 탭에서 새 문장을 만들 수 있어요.'}),h('div',{style:'margin-top:12px'},h('button',{class:'btn sm',type:'button',onclick:()=>go('add'),text:'문장 추가'}))));
+    return root;
+  }
+  root.append(next?h('button',{class:'btn block',type:'button',onclick:()=>startPractice(next),text:done?'이어서 연습하기':'오늘 연습 시작'})
+                  :h('div',{class:'card'},h('h2',{text:'오늘 연습을 모두 마쳤어요'}),h('p',{class:'sub',text:'내일은 오늘 문장을 먼저 복습하고, 새 문장이 이어집니다.'})));
+  const lists=h('div',{class:'stack',style:'gap:14px;margin-top:8px'});
+  if(day.reviewIds.length){
+    lists.append(h('div',null,h('div',{class:'section-h'},h('h3',{text:'어제 문장 복습'}),h('span',{class:'sub',text:day.reviewIds.filter(i=>day.doneIds.includes(i)).length+'/'+day.reviewIds.length})),
+      rowsBox(day.reviewIds,true,day)));
+  }
+  lists.append(h('div',null,h('div',{class:'section-h'},h('h3',{text:'오늘의 새 문장'}),h('span',{class:'sub',text:day.newIds.filter(i=>day.doneIds.includes(i)).length+'/'+day.newIds.length})),
+    day.newIds.length?rowsBox(day.newIds,false,day):h('p',{class:'sub',text:'남은 새 문장이 없어요. 문장 추가 탭에서 만들어 주세요.'})));
+  root.append(h('details',{class:'card todaybox'},h('summary',{style:'cursor:pointer;font-weight:700',text:'오늘 문제 목록 보기 ('+done+'/'+ids.length+')'}),lists));
+  const sel0=(S.settings.topics||[]);
+  root.append(h('p',{class:'help'},'새 문장 주제: '+(sel0.length?sel0.join(', '):'전체'),' ',h('a',{href:'#',onclick:e=>{e.preventDefault();go('settings');},text:'변경'})));
+  if(day.note)root.append(h('p',{class:'help warn',text:day.note}));
+  root.append(h('button',{class:'btn ghost sm',type:'button',onclick:redrawNew,text:'오늘 새 문장 다시 뽑기 (아직 안 푼 것만)'}));
+  if(unseen>0){
+    root.append(h('div',{class:'stack',style:'gap:8px'},
+      h('button',{class:'btn ghost sm',type:'button',onclick:()=>addMoreNew(1),text:'새 문장 1개 더'}),
+      unseen>1?h('button',{class:'btn ghost sm',type:'button',onclick:()=>addMoreNew(S.settings.perDay),text:'내일 분량 미리 받기 (+'+Math.min(S.settings.perDay,unseen)+'문장)'}):null,
+      h('p',{class:'help',text:'더 받은 문장은 오늘 목록에 추가되고, 내일 복습에도 나옵니다. 남은 새 문장 '+unseen+'개'})));
+  }
+  return root;
+}
+
+/* ---------- 연습 ---------- */
+const CIRC=2*Math.PI*50;
+let P=null;
+const SRC=window.SpeechRecognition||window.webkitSpeechRecognition;
+
+function startPractice(id){
+  cleanupPractice();
+  const day=ensureToday();
+  P={ids:day.reviewIds.concat(day.newIds).filter(i=>byId(i)),id:id,step:'work',phase:1,played:false,replays:0,hint:false,
+     t0:0,timerOn:false,frozen:null,tick:null,respSec:null,endSec:null,speakSec:null,
+     text:'',recUrl:null,recording:false,srBase:'',restarts:0,manualStop:false,sr:null,mr:null,stream:null,chunks:[],
+     ev:{m:null,n:null,t:null},again:false,el:{},limit:S.settings.limit,basis:S.settings.basis};
+  go('practice');
+}
+function cleanupPractice(){
+  if(!P)return;
+  try{speechSynthesis.cancel();}catch(e){}
+  clearInterval(P.tick);
+  P.manualStop=true;P.recording=false;
+  try{P.sr&&P.sr.abort();}catch(e){}
+  try{P.mr&&P.mr.state!=='inactive'&&P.mr.stop();}catch(e){}
+  try{P.stream&&P.stream.getTracks().forEach(t=>t.stop());}catch(e){}
+  if(P.recUrl){try{URL.revokeObjectURL(P.recUrl);}catch(e){}}
+  P=null;
+}
+const cur=()=>byId(P.id);
+
+function viewPractice(){
+  const s=cur(),day=ensureToday();
+  const isReview=day.reviewIds.includes(P.id);
+  const root=h('div',{class:'stack'});
+  root.append(h('div',{class:'pbar'},
+    h('button',{class:'link',type:'button',onclick:()=>go('today'),text:'← 오늘'}),
+    h('div',{class:'meta'},chip(s.lang),h('span',{class:'tag',text:isReview?'복습':'신규'}),h('span',{class:'tag mono',text:(P.ids.indexOf(P.id)+1)+'/'+P.ids.length}))));
+  P.el.steps=h('ol',{class:'steps'});
+  root.append(P.el.steps);
+  P.stage=h('div',{class:'stack'});
+  root.append(P.stage);
+  paintPhase();
+  buildStep();
+  return root;
+}
+function paintPhase(){
+  if(!P||!P.el.steps)return;
+  const names=['① 듣기','② 통역','③ 글자 확인','④ 비교'];
+  P.el.steps.replaceChildren();
+  names.forEach((n,i)=>P.el.steps.append(h('li',{class:i+1===P.phase?'on':(i+1<P.phase?'done':''),text:n})));
+}
+function buildStep(){P.stage.replaceChildren();P.step==='work'?buildWork():buildCompare();window.scrollTo(0,0);}
+
+/* --- 타이머 --- */
+function paintTimer(){
+  if(!P||!P.el.timer)return;
+  const lim=P.limit;
+  let el=P.timerOn?(Date.now()-P.t0)/1000:(P.frozen!=null?P.frozen:null);
+  if(el==null){P.el.tv.firstChild.textContent='--';P.el.arc.style.strokeDashoffset='0';P.el.timer.className='timer idle';return;}
+  const rem=lim-el;
+  P.el.tv.firstChild.textContent=rem>0?String(Math.ceil(rem)):'+'+(-rem).toFixed(1);
+  P.el.arc.style.strokeDashoffset=String(CIRC*(1-Math.max(0,Math.min(1,rem/lim))));
+  P.el.timer.className='timer '+(rem>5?'':(rem>0?'warn':'bad'));
+  if(P.timerOn&&P.basis==='finish'&&P.recording&&rem<=0)stopRec();
+}
+function startTimer(){
+  clearInterval(P.tick);P.t0=Date.now();P.timerOn=true;P.frozen=null;P.respSec=null;P.endSec=null;
+  P.tick=setInterval(paintTimer,100);paintTimer();
+}
+function freezeTimer(){
+  if(!P.timerOn)return;
+  P.frozen=(Date.now()-P.t0)/1000;P.timerOn=false;clearInterval(P.tick);paintTimer();
+}
+function resetTimer(){clearInterval(P.tick);P.timerOn=false;P.frozen=null;P.t0=0;paintTimer();}
+
+/* --- 듣기 --- */
+async function playSource(rate){
+  const s=cur();
+  if(P.recording)return;
+  if(P.played)P.replays++;
+  P.played=true;
+  resetTimer();
+  P.el.play.setAttribute('aria-busy','true');
+  let ok;
+  try{ok=await speak(s.src,s.lang,rate);}catch(e){ok=null;}
+  if(!P)return;
+  P.el.play.removeAttribute('aria-busy');
+  if(ok===true){startTimer();}
+  else if(ok===null){
+    showHint();
+    toast('이 기기에서 음성을 재생할 수 없어 글자를 보여드려요.');
+    startTimer();
+  }
+}
+function showHint(){
+  const s=cur();P.hint=true;
+  P.el.hint.replaceChildren(h('div',{class:'sub',text:'글자 힌트를 사용했어요 (기록에 남아요)'}),h('div',{class:'sent',lang:s.lang,text:s.src}));
+  P.el.hint.hidden=false;
+}
+
+/* --- 통역(녹음 · 인식) --- */
+function setTranscript(t){P.text=t;if(P.el.text&&P.el.text.value!==t)P.el.text.value=t;updateNext();}
+function updateNext(){if(P.el.next)P.el.next.disabled=false;}
+function paintMic(){
+  if(!P||!P.el.mic)return;
+  P.el.mic.className='mic'+(P.recording?' rec':'');
+  P.el.mic.replaceChildren(svg(P.recording?ICON.stop:ICON.mic));
+  P.el.mic.setAttribute('aria-label',P.recording?'녹음 멈추기':'마이크로 통역하기');
+  P.el.status.textContent=P.recording?'듣고 있어요… 다 말했으면 멈춤':(P.speakSec!=null?'녹음을 마쳤어요. 아래에서 글자를 확인하세요.':'원문을 듣고 마이크를 눌러 '+LN[other(cur().lang)]+'로 통역하세요.');
+}
+function micHelp(msg,warn){P.el.help.textContent=msg;P.el.help.className='help'+(warn?' warn':'');}
+function startSR(){
+  if(!SRC)return false;
+  try{
+    const r=new SRC();
+    r.lang=other(cur().lang)==='ja'?'ja-JP':'ko-KR';
+    r.interimResults=true;r.continuous=true;r.maxAlternatives=1;
+    r.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;setTranscript((P.srBase+' '+t).trim());};
+    r.onerror=e=>{
+      const c=e&&e.error;
+      if(c==='no-speech'||c==='aborted')return;
+      if(c==='not-allowed'||c==='service-not-allowed')micHelp('마이크 또는 음성 인식 권한이 꺼져 있어요. 브라우저 설정에서 허용하거나 아래 칸에 직접 입력하세요.',true);
+      else if(c==='audio-capture')micHelp('마이크를 사용할 수 없어요. 설정에서 “내 목소리 녹음”을 끄면 인식이 될 수 있어요.',true);
+      else if(c==='network')micHelp('음성 인식 서버에 연결하지 못했어요. 직접 입력해 주세요.',true);
+      else micHelp('음성 인식에 실패했어요('+(c||'unknown')+'). 직접 입력해 주세요.',true);
+    };
+    r.onend=()=>{
+      if(P&&P.recording&&!P.manualStop&&P.restarts<4){P.restarts++;P.srBase=P.text;try{r.start();}catch(_){}}
+    };
+    r.start();P.sr=r;return true;
+  }catch(e){return false;}
+}
+async function startMedia(){
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof MediaRecorder==='undefined')throw new Error('unsupported');
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    if(!P||!P.recording){stream.getTracks().forEach(t=>t.stop());return false;}
+    P.stream=stream;P.chunks=[];
+    let mime='';
+    ['audio/webm;codecs=opus','audio/mp4','audio/webm','audio/ogg'].some(m=>{try{if(MediaRecorder.isTypeSupported(m)){mime=m;return true;}}catch(e){}return false;});
+    const mr=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    mr.ondataavailable=e=>{if(e.data&&e.data.size)P&&P.chunks.push(e.data);};
+    mr.onstop=()=>{
+      if(!P)return;
+      try{P.stream&&P.stream.getTracks().forEach(t=>t.stop());}catch(e){}
+      if(P.chunks.length){
+        if(P.recUrl){try{URL.revokeObjectURL(P.recUrl);}catch(e){}}
+        P.recUrl=URL.createObjectURL(new Blob(P.chunks,{type:mr.mimeType||mime||'audio/webm'}));
+        paintRecAudio();
+      }
+    };
+    mr.start();P.mr=mr;return true;
+  }catch(e){
+    if(P&&e&&(e.name==='NotAllowedError'||e.name==='SecurityError'))micHelp('이 화면에서는 마이크를 쓸 수 없어요(권한 거부 또는 미리보기 제한). 아래 칸에 직접 입력해도 비교는 똑같이 할 수 있어요.',true);
+    else if(P)micHelp('녹음을 시작하지 못했어요. 아래 칸에 직접 입력해 주세요.',true);
+    return false;
+  }
+}
+function paintRecAudio(){
+  if(!P||!P.el.audioBox)return;
+  P.el.audioBox.replaceChildren();
+  if(P.recUrl){P.el.audioBox.append(h('div',{class:'help',text:'내 목소리 (이 화면에서만 들을 수 있고 저장되지 않아요)'}),h('audio',{controls:true,src:P.recUrl}));}
+}
+async function startRec(){
+  if(P.recording)return;
+  try{speechSynthesis.cancel();}catch(e){}
+  const now=Date.now();
+  P.respSec=P.timerOn?(now-P.t0)/1000:(P.frozen!=null?P.frozen:null);
+  if(P.timerOn&&P.basis==='start')freezeTimer();
+  P.recording=true;P.recStart=now;P.srBase='';P.restarts=0;P.manualStop=false;P.speakSec=null;P.chunks=[];
+  if(P.recUrl){try{URL.revokeObjectURL(P.recUrl);}catch(e){}P.recUrl=null;paintRecAudio();}
+  setTranscript('');
+  P.phase=2;paintPhase();paintMic();micHelp('',false);
+  let any=false;
+  if(S.settings.stt){any=startSR()||any;if(!SRC)micHelp('이 브라우저는 음성 인식을 지원하지 않아요. 녹음 후 아래 칸에 직접 입력하세요.',true);}
+  if(S.settings.rec){const ok=await startMedia();any=ok||any;}
+  else if(!S.settings.stt){micHelp('설정에서 녹음과 음성 인식이 모두 꺼져 있어요. 아래 칸에 직접 입력하세요.',true);}
+  if(P&&!any){P.recording=false;P.manualStop=true;P.speakSec=null;P.phase=3;paintPhase();paintMic();P.el.text.focus();}
+}
+function stopRec(){
+  if(!P||!P.recording)return;
+  P.manualStop=true;P.recording=false;
+  P.speakSec=(Date.now()-P.recStart)/1000;
+  if(P.timerOn&&P.basis==='finish'){P.endSec=(Date.now()-P.t0)/1000;freezeTimer();}
+  try{P.sr&&P.sr.stop();}catch(e){}
+  try{P.mr&&P.mr.state!=='inactive'&&P.mr.stop();}catch(e){}
+  P.phase=3;paintPhase();paintMic();
+}
+
+function buildWork(){
+  const s=cur();
+  const el=P.el;
+  el.play=h('button',{class:'play',type:'button','aria-label':'원문 음성 듣기',onclick:()=>playSource(S.settings.rate)},svg(ICON.play));
+  el.hint=h('div',{class:'hint',hidden:true});
+  const tsvg=svg('<svg viewBox="0 0 118 118" aria-hidden="true"><circle class="trk" cx="59" cy="59" r="50"/><circle class="arc" cx="59" cy="59" r="50" stroke-dasharray="'+CIRC+'" stroke-dashoffset="0"/></svg>');
+  el.arc=tsvg.querySelector('.arc');
+  el.tv=h('div',{class:'tv','aria-live':'off'},document.createTextNode('--'),h('small',{text:P.basis==='start'?'시작까지':'완료까지'}));
+  el.timer=h('div',{class:'timer idle'},tsvg,el.tv);
+  const listen=h('div',{class:'card'},
+    h('div',{class:'listen'},
+      h('div',{class:'stack',style:'gap:12px'},
+        h('div',null,h('h2',{text:LN[s.lang]+' 문장을 듣고'}),h('p',{class:'sub',text:LN[other(s.lang)]+'로 통역하세요. 원문은 숨겨져 있어요.'})),
+        h('div',{class:'ctrl'},
+          el.play,
+          h('div',{class:'stack',style:'gap:8px'},
+            h('button',{class:'btn ghost sm',type:'button',onclick:()=>playSource(S.settings.slow),text:'천천히 듣기'}),
+            h('button',{class:'btn ghost sm',type:'button',onclick:()=>{if(!P.hint)showHint();},text:'글자로 보기'})))),
+      el.timer),
+    el.hint,
+    h('p',{class:'help',style:'margin-top:10px',text:'다시 듣기는 재생 버튼을 한 번 더 누르면 됩니다. 다시 들은 횟수는 기록돼요.'}));
+  P.stage.append(listen);
+
+  el.mic=h('button',{class:'mic',type:'button',onclick:()=>{P.recording?stopRec():startRec();}});
+  el.status=h('div',{class:'status'});
+  el.help=h('div',{class:'help'});
+  el.audioBox=h('div');
+  el.text=h('textarea',{class:'field',id:'my-text',lang:other(s.lang),placeholder:'말한 내용이 여기에 글자로 나타나요. 인식이 틀렸다면 직접 고치세요.',
+    oninput:()=>{P.text=el.text.value;if(P.phase<3&&!P.recording){P.phase=3;paintPhase();}}});
+  el.text.value=P.text;
+  el.next=h('button',{class:'btn block',type:'button',text:'모범 통역 보기',onclick:()=>{
+    if(P.recording)stopRec();
+    P.text=el.text.value;P.step='compare';P.phase=4;paintPhase();buildStep();}});
+  const speakCard=h('div',{class:'card speak'},
+    h('div',{class:'speak-top'},el.mic,h('div',{class:'stack',style:'gap:4px'},el.status,el.help)),
+    el.audioBox,
+    h('label',{class:'lb',for:'my-text'},'내 통역 (글자)',el.text));
+  P.stage.append(speakCard,el.next);
+  paintMic();paintRecAudio();
+  if(voices.length&&!voiceFor(s.lang))toast(LN[s.lang]+' 음성이 이 기기에 없어요. 기기 설정에서 음성을 추가하거나 “글자로 보기”를 쓰세요.');
+  paintTimer();
+}
+
+/* --- 통역 차이 표시 (글자 단위 비교) --- */
+function diffMarks(me,ref){
+  const A=Array.from(me||''),B=Array.from(ref||'');
+  const ign=c=>/[\s、。,.!?！？「」『』"'“”]/.test(c);
+  const ia=[],ib=[];
+  A.forEach((c,i)=>{if(!ign(c))ia.push(i);});
+  B.forEach((c,i)=>{if(!ign(c))ib.push(i);});
+  const n=ia.length,m=ib.length;
+  if(!n||!m||n*m>60000)return null;
+  const w=m+1,dp=new Uint16Array((n+1)*w);
+  const eq=(i,j)=>A[ia[i]].toLowerCase()===B[ib[j]].toLowerCase();
+  for(let i=1;i<=n;i++)for(let j=1;j<=m;j++){
+    dp[i*w+j]=eq(i-1,j-1)?dp[(i-1)*w+j-1]+1:Math.max(dp[(i-1)*w+j],dp[i*w+j-1]);
+  }
+  const fa=A.map(()=>true),fb=B.map(()=>true);
+  ia.forEach(i=>{fa[i]=false;});ib.forEach(i=>{fb[i]=false;});
+  let i=n,j=m;
+  while(i>0&&j>0){
+    if(eq(i-1,j-1)){fa[ia[i-1]]=true;fb[ib[j-1]]=true;i--;j--;}
+    else if(dp[(i-1)*w+j]>=dp[i*w+j-1])i--;else j--;
+  }
+  return{A:A,B:B,fa:fa,fb:fb};
+}
+function markedNode(arr,flags){
+  const frag=document.createDocumentFragment();
+  let buf='',cur=null;
+  const flush=()=>{if(!buf)return;frag.append(cur?document.createTextNode(buf):h('span',{class:'dx',text:buf}));buf='';};
+  arr.forEach((c,i)=>{const ok=flags[i];if(cur!==ok){flush();cur=ok;}buf+=c;});
+  flush();return frag;
+}
+
+/* --- 비교 --- */
+function buildCompare(){
+  const s=cur(),tgt=other(s.lang),pr=S.progress[s.id]||{attempts:[],memo:''};
+  const hits=hitsFor(s,P.text);
+  const dm=P.text.trim()?diffMarks(P.text,s.ref):null;
+  const lastAtt=pr.attempts.length?pr.attempts[pr.attempts.length-1]:null;
+  const respLine=P.respSec==null?'응답 시간 기록 없음':'응답까지 '+P.respSec.toFixed(1)+'초 · '+(P.respSec<=P.limit?'제한 이내':'제한 초과');
+  const bits=[respLine];
+  if(P.basis==='finish'&&P.endSec!=null)bits.push('통역 완료까지 '+P.endSec.toFixed(1)+'초');
+  if(P.speakSec!=null)bits.push('말한 시간 '+P.speakSec.toFixed(1)+'초');
+  bits.push('다시 듣기 '+P.replays+'회'+(P.hint?' · 글자 힌트 사용':''));
+
+  const modelPlay=(rate)=>speak(s.ref,tgt,rate).catch(()=>toast('이 기기에서 음성을 재생할 수 없어요.'));
+  const blocks=h('div',{class:'cmp'},
+    h('div',{class:'cmp-block'},h('div',{class:'lab'},h('h3',{text:'원문 ('+LN[s.lang]+')'}),h('button',{class:'link',type:'button',onclick:()=>speak(s.src,s.lang,S.settings.rate).catch(()=>{}),text:'다시 듣기'})),
+      h('div',{class:'sent',lang:s.lang,text:s.src})),
+    h('div',{class:'cmp-block mine'},h('h3',{text:'내 통역'}),
+      P.text.trim()?h('div',{class:'sent',lang:tgt},dm?markedNode(dm.A,dm.fa):P.text):h('div',{class:'help',text:'입력된 통역이 없어요. 아래 “다시 해보기”로 다시 도전할 수 있어요.'})),
+    h('div',{class:'cmp-block model'},h('div',{class:'lab'},h('h3',{text:'모범 통역'}),
+      h('div',{class:'ctrl'},h('button',{class:'btn sm ghost',type:'button',onclick:()=>modelPlay(S.settings.rate),text:'듣기'}),h('button',{class:'btn sm ghost',type:'button',onclick:()=>modelPlay(S.settings.slow),text:'천천히'}))),
+      h('div',{class:'sent',lang:tgt},dm?markedNode(dm.B,dm.fb):s.ref),
+      dm?h('p',{class:'help',text:'물결 밑줄은 모범 표현과 다른 부분이에요. 틀린 게 아니라 다른 표현일 수도 있어요.'}):null,
+      h('p',{class:'help',text:'모범 표현을 듣고 소리 내어 따라 말해 보세요. 한 번 더 말해 보면 입에 붙습니다.'})));
+
+  const check=hits.total?h('div',{class:'card'},
+    h('div',{class:'section-h'},h('h2',{text:'빠뜨린 정보 체크'}),h('span',{class:'sub mono',text:hits.ok+'/'+hits.total})),
+    h('div',{class:'pills'},hits.rows.map(r=>h('span',{class:'pill '+(r.hit?'hit':'miss'),text:(r.hit?'✓ ':'✕ ')+r.label+(r.hit?'':' · 예: '+r.any.slice(0,2).join(', '))}))),
+    h('p',{class:'help',style:'margin-top:8px',text:'내 통역에 핵심 단어가 들어 있는지 글자로만 확인한 참고 결과예요. 다른 표현도 맞을 수 있으니 의미 기준으로 판단하세요.'})):null;
+
+  const keys=h('div',{class:'card stack',style:'gap:12px'},
+    h('h2',{text:'핵심 표현과 뉘앙스'}),
+    h('div',{class:'key'},(s.key||[]).map(k=>h('div',null,h('b',{lang:'ja',text:k[0]}),h('span',{class:'sub',text:k[1]})))),
+    s.nuance?h('p',{text:s.nuance}):null);
+
+  const gramCard=(s.gram&&s.gram.length)?h('div',{class:'card stack',style:'gap:12px'},h('h2',{text:'문법 설명'}),gramList(s)):null;
+  const fbPrompt=feedbackPrompt(s,P.text);
+  const fbOut=h('div',{class:'ai-out',hidden:true});
+  const fbMsg=h('p',{class:'help'});
+  const fbBtn=h('button',{class:'btn sm',type:'button',hidden:true,text:'AI 첨삭 받기'});
+  fbBtn.addEventListener('click',async()=>{
+    fbBtn.disabled=true;fbMsg.className='help';fbMsg.textContent='첨삭하는 중이에요…';fbOut.hidden=true;
+    try{
+      const t=await askAI(fbPrompt,{kind:'feedback'});
+      if(t==null)throw new Error('AI를 바로 쓸 수 없어요. 요청 글을 복사해 붙여넣어 주세요.');
+      fbOut.textContent=String(t).trim();fbOut.hidden=false;
+      const pp=S.progress[s.id]=S.progress[s.id]||{done:[],attempts:[],memo:''};
+      pp.fb=(Array.isArray(pp.fb)?pp.fb:[]).concat([{d:todayStr(),mine:String(P.text||'').slice(0,400),ai:String(t).trim().slice(0,4000)}]).slice(-20);
+      save();fbMsg.textContent='첨삭을 받았고 누적 탭에 저장했어요.';
+    }catch(e){fbMsg.className='help warn';fbMsg.textContent=(e&&e.code==='not_granted')?'AI 사용 권한이 허용되지 않았어요.':((e&&e.message)||'첨삭에 실패했어요. 요청 글을 복사해 붙여넣어 주세요.');}
+    finally{fbBtn.disabled=false;}
+  });
+  aiReady(()=>{fbBtn.hidden=false;});
+  const aiCard=h('div',{class:'card stack',style:'gap:10px'},
+    h('h2',{text:'AI 첨삭'}),
+    h('p',{class:'help',text:'틀린 의미, 문법 오류, 더 자연스러운 표현은 AI가 가장 정확히 짚어 줍니다. 아래 버튼으로 요청 글을 복사해 ChatGPT나 Claude에 붙여넣으면 첨삭을 받을 수 있어요.'}),
+    h('div',{class:'ctrl'},fbBtn,h('button',{class:'btn ghost sm',type:'button',text:'첨삭 요청 글 복사',onclick:()=>copyText(fbPrompt)})),
+    fbMsg,fbOut);
+
+  const pron=h('div',{class:'card stack',style:'gap:10px'},
+    h('h2',{text:'읽기 힌트'}),
+    s.yomi?h('p',{class:'sub',lang:'ja',text:s.yomi}):h('p',{class:'help',text:'이 문장은 읽기 힌트가 없어요.'}),
+    h('p',{class:'help',text:'음성 인식이 맞게 나왔다고 해서 발음이 정확하다는 뜻은 아니에요. 모범 음성과 내 녹음을 번갈아 들어 보세요.'}));
+
+  const againChk=h('input',{type:'checkbox',id:'again',onchange:()=>{P.again=againChk.checked;}});
+  P.again=P.again||(hits.total>0&&hits.ok/hits.total<0.6);
+  againChk.checked=P.again;
+  const evalCard=h('div',{class:'card stack',style:'gap:12px'},
+    h('h2',{text:'복습'}),
+    h('label',{class:'chk',for:'again'},againChk,h('span',{text:'내일도 다시 복습하기'})));
+
+  const prev=lastAtt&&lastAtt.text?h('div',{class:'card'},h('h3',{text:'지난번 내 통역 ('+lastAtt.d+')'}),h('div',{class:'sent sm',lang:tgt,style:'margin-top:6px',text:lastAtt.text})):null;
+
+  const foot=h('div',{class:'foot'},
+    h('button',{class:'btn ghost',type:'button',text:'다시 해보기',onclick:()=>{
+      resetTimer();P.step='work';P.phase=1;P.played=false;P.replays=0;P.hint=false;P.text='';P.speakSec=null;P.respSec=null;P.endSec=null;
+      if(P.recUrl){try{URL.revokeObjectURL(P.recUrl);}catch(e){}P.recUrl=null;}
+      paintPhase();buildStep();}}),
+    h('button',{class:'btn',type:'button',text:'완료하고 다음',onclick:finishSentence}));
+
+  [h('div',{class:'card'},h('div',{class:'cmp'},blocks,h('p',{class:'sub mono',style:'font-size:12px',text:bits.join(' · ')}))),
+    check,keys,gramCard,aiCard,pron,prev,evalCard,foot].filter(Boolean).forEach(n=>P.stage.append(n));
+}
+function finishSentence(){
+  const s=cur(),t=todayStr();
+  const pr=S.progress[s.id]=S.progress[s.id]||{done:[],attempts:[],memo:''};
+  const hits=hitsFor(s,P.text);
+  const r1=v=>v==null?null:Math.round(v*10)/10;
+  pr.attempts.push({d:t,text:P.text,resp:r1(P.respSec),speak:r1(P.speakSec),replays:P.replays,hint:P.hint,hits:hits.ok,total:hits.total,ev:P.ev});
+  pr.attempts=pr.attempts.slice(-10);
+  if(!pr.done.includes(t))pr.done.push(t);
+  pr.again=!!P.again;pr.lastDone=t;
+  const day=ensureToday();
+  if(!day.doneIds.includes(s.id))day.doneIds.push(s.id);
+  save();
+  const i=P.ids.indexOf(s.id);
+  const order=P.ids.slice(i+1).concat(P.ids.slice(0,i));
+  const nxt=order.find(id=>!day.doneIds.includes(id));
+  if(nxt){startPractice(nxt);toast('저장했어요. 다음 문장입니다.');}
+  else{go('today');toast('오늘 연습을 모두 마쳤어요.');}
+}
+
+/* ---------- 누적 ---------- */
+let libFilter='all',libQ='';
+function dayLabel(d){
+  const dt=new Date(d+'T00:00:00');
+  if(isNaN(dt))return d;
+  return (dt.getMonth()+1)+'월 '+dt.getDate()+'일 ('+['일','월','화','수','목','금','토'][dt.getDay()]+')';
+}
+function viewHistory(){
+  const root=h('div',{class:'stack'});
+  root.append(h('div',{class:'top'},h('div',null,h('h1',{text:'지난 학습'}),h('div',{class:'sub',text:'날짜별로 다시 보는 곳'}))));
+  const t=todayStr();
+  const ds=Object.keys(S.days).filter(d=>d<t).sort().reverse();
+  if(!ds.length){root.append(h('div',{class:'empty'},h('p',{text:'아직 지난 학습이 없어요.'}),h('p',{class:'sub',text:'오늘 연습을 하면 내일부터 여기에 날짜별로 쌓여요.'})));return root;}
+  ds.forEach((d,idx)=>{
+    const x=S.days[d];
+    const ids=[];(x.newIds||[]).concat(x.reviewIds||[]).forEach(i=>{if(byId(i)&&!ids.includes(i))ids.push(i);});
+    if(!ids.length)return;
+    const dn=ids.filter(i=>(x.doneIds||[]).includes(i)).length;
+    const body=h('div',{class:'stack',style:'gap:8px;margin-top:8px'});
+    let filled=false;
+    const det=h('details',{class:'card hday'},
+      h('summary',{style:'cursor:pointer'},h('b',{text:dayLabel(d)}),h('span',{class:'sub',text:'  완료 '+dn+'/'+ids.length})),body);
+    const fill=()=>{if(filled)return;filled=true;ids.forEach(i=>body.append(libItem(byId(i))));};
+    det.addEventListener('toggle',()=>{if(det.open)fill();});
+    root.append(det);
+  });
+  return root;
+}
+function viewLibrary(){
+  const root=h('div',{class:'stack'});
+  root.append(h('div',{class:'top'},h('div',null,h('h1',{text:'누적'}),h('div',{class:'sub',text:'지금까지 만난 문장과 기록'}))));
+  const items=all().filter(s=>S.progress[s.id]&&S.progress[s.id].introDay);
+  const doneN=items.filter(s=>(S.progress[s.id].done||[]).length).length;
+  const unseen=all().length-items.length;
+  const days=Object.keys(S.days).filter(d=>S.days[d].doneIds&&S.days[d].doneIds.length).length;
+  const resp=[];items.forEach(s=>(S.progress[s.id].attempts||[]).forEach(a=>{if(typeof a.resp==='number')resp.push(a.resp);}));
+  const ar=avg(resp);
+  root.append(h('div',{class:'stats'},
+    h('div',null,h('b',{text:String(items.length)}),h('span',{text:'누적 문장'})),
+    h('div',null,h('b',{text:String(doneN)}),h('span',{text:'연습 완료'})),
+    h('div',null,h('b',{text:ar==null?'-':ar.toFixed(1)+'s'}),h('span',{text:'평균 응답'}))));
+  const strip=h('div',{class:'strip','aria-label':'최근 14일 연습'});
+  for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const dd=S.days[dstr(d)];const n=dd&&dd.doneIds?dd.doneIds.length:0;
+    strip.append(h('i',{class:n>=5?'l3':n>=3?'l2':n>=1?'l1':'',title:dstr(d)+' · '+n+'문장'}));}
+  root.append(h('div',null,h('div',{class:'section-h'},h('h3',{text:'최근 14일'}),h('span',{class:'sub',text:'연습한 날 '+days+'일 · 아직 안 만난 문장 '+unseen})),strip));
+  const list=h('div');
+  const q=h('input',{class:'field',id:'lib-q',type:'search',placeholder:'문장·표현 검색',value:libQ,oninput:()=>{libQ=q.value;paintList();}});
+  const fb=[['all','전체'],['done','완료'],['again','복습 필요']].map(f=>h('button',{class:'fbtn',type:'button','aria-pressed':String(libFilter===f[0]),text:f[1],onclick:()=>{libFilter=f[0];[].forEach.call(fbWrap.children,(c,i)=>c.setAttribute('aria-pressed',String(['all','done','again'][i]===libFilter)));paintList();}}));
+  const fbWrap=h('div',{class:'filters'},fb);
+  root.append(h('div',{class:'stack',style:'gap:10px'},q,fbWrap),list);
+  function paintList(){
+    list.replaceChildren();
+    const qq=libQ.trim().toLowerCase();
+    const rows=items.filter(s=>{
+      const p=S.progress[s.id];
+      if(libFilter==='done'&&!(p.done||[]).length)return false;
+      if(libFilter==='again'&&!p.again)return false;
+      if(qq&&(s.src+' '+s.ref+' '+(s.key||[]).map(k=>k[0]+k[1]).join(' ')).toLowerCase().indexOf(qq)<0)return false;
+      return true;
+    }).sort((a,b)=>(S.progress[b.id].introDay||'').localeCompare(S.progress[a.id].introDay||''));
+    if(!rows.length){list.append(h('div',{class:'empty',text:items.length?'조건에 맞는 문장이 없어요.':'아직 만난 문장이 없어요. 오늘 탭에서 연습을 시작해 보세요.'}));return;}
+    rows.forEach(s=>list.append(libItem(s)));
+  }
+  paintList();
+  return root;
+}
+function libItem(s){
+  const p=S.progress[s.id],tgt=other(s.lang);
+  const atts=(p.attempts||[]).slice(-3).reverse();
+  return h('details',{class:'lib'},
+    h('summary',null,
+      h('div',{class:'row-main'},h('div',{class:'meta'},chip(s.lang),h('span',{class:'tag mono',text:p.introDay}),s.topic?h('span',{class:'tag',text:s.topic}):null,
+        (p.done||[]).length?h('span',{class:'tag ok',text:'완료 '+p.done.length+'회'}):h('span',{class:'tag',text:'미완료'}),
+        p.again?h('span',{class:'tag warn',text:'복습 필요'}):null),
+        h('div',{class:'sent sm',lang:s.lang,text:s.src}))),
+    h('div',{class:'lib-body'},
+      h('div',{class:'cmp-block model'},h('h3',{text:'모범 통역'}),h('div',{class:'sent sm',lang:tgt,text:s.ref})),
+      (s.key&&s.key.length)?h('div',{class:'key'},s.key.map(k=>h('div',null,h('b',{lang:'ja',text:k[0]}),h('span',{class:'sub',text:k[1]})))):null,
+      s.nuance?h('p',{class:'sub',text:s.nuance}):null,
+      (s.gram&&s.gram.length)?gramList(s):null,
+      s.yomi?h('p',{class:'sub',lang:'ja',text:'읽기: '+s.yomi}):null,
+      (Array.isArray(p.fb)&&p.fb.length)?h('div',{class:'stack',style:'gap:8px'},h('h3',{text:'AI 첨삭 기록 ('+p.fb.length+')'}),p.fb.slice(-5).reverse().map(f=>h('details',{class:'fbrec'},h('summary',{class:'help',style:'cursor:pointer',text:f.d+' · '+(f.mine||'(통역 없음)').slice(0,40)}),h('div',{class:'ai-out',text:f.ai})))):null,
+      atts.length?h('div',{class:'att'},atts.map(a=>h('div',null,a.d+' · '+(a.resp==null?'-':a.resp+'초')+' · 정보 '+a.hits+'/'+a.total+(a.text?' · '+a.text:'')))):null,
+      h('button',{class:'btn ghost sm',type:'button',text:'이 문장 다시 연습',onclick:()=>{
+        const day=ensureToday();
+        if(!day.reviewIds.includes(s.id)&&!day.newIds.includes(s.id))day.reviewIds.push(s.id);
+        save();startPractice(s.id);}})));
+}
+
+/* ---------- 문장 추가 ---------- */
+const SCHEMA='출력은 JSON 배열만 (설명, 코드블록 금지). 각 요소 형식:\n{"lang":"ja"|"ko","src":"원문","ref":"모범 통역","key":[["핵심 표현","설명(한국어)"]],"gram":[["문법 포인트","설명(한국어: 접속·활용, 비슷한 표현과의 차이)"]],"topic":"주제 목록 중 하나","nuance":"한일 뉘앙스 차이 1~2문장(한국어)","yomi":"어려운 한자·숫자 읽기 힌트. 예: 納期(のうき)","must":[["항목 이름",["모범 통역에 들어가야 할 단어1","단어2"]]]}\nkey는 2~3개, gram은 1~2개, must는 3~4개로 해 주세요. must의 단어는 ref에 실제로 들어 있는 표현이어야 합니다.\ntopic은 다음 중 하나로 쓰세요: '+TOPICS.join(', ')+'.';
+function buildPrompt(topic,level,count,existing,mine){
+  if(mine&&mine.length){
+    return '당신은 한일 비즈니스 통역 교육 전문가입니다. 아래 문장을 통역 연습용 원문으로 사용해, 각 문장의 모범 통역과 해설을 만들어 주세요. 문장의 언어(일본어/한국어)를 판별해 lang을 정하고, ref는 반대 언어의 자연스러운 업무 표현으로 쓰세요(직역 금지). 원문은 오탈자만 고치고 그대로 쓰세요.\n\n[원문 목록]\n'+mine.map((x,i)=>(i+1)+'. '+x).join('\n')+'\n\n'+SCHEMA;
+  }
+  const len={1:'한 문장 15~25자 정도의 짧은 문장',2:'한 문장 25~45자 정도의 보통 길이 문장',3:'45~80자 정도로 절이 두 개 있는 긴 문장'}[level];
+  return '당신은 한일 비즈니스 통역 교육 전문가입니다. 한국어·일본어 비즈니스 통역 학습자가 실제 업무 현장에서 마주치는 상황(주제: '+topic+')을 가정해, 통역 연습 문장 '+count+'개를 만들어 주세요.\n'+
+  '조건:\n- '+len+'\n- 첫 문장은 일본어 원문(lang:"ja")이고, 이후 일본어 원문과 한국어 원문(lang:"ko")을 번갈아 배치\n- ref는 원문의 반대 언어 모범 통역. 직역이 아니라 실제 업무에서 자연스러운 표현\n- 숫자·날짜·고유명사·경어 차이처럼 통역에서 실수하기 쉬운 요소를 문장마다 1개 이상 포함\n'+
+  (existing.length?'- 다음 문장과 겹치지 않게: '+existing.join(' / ')+'\n':'')+SCHEMA;
+}
+function feedbackPrompt(s,text){
+  const tgt=other(s.lang);
+  return '당신은 한일 통역 교육 전문가입니다. 학습자가 '+LN[s.lang]+' 문장을 듣고 '+LN[tgt]+'로 통역했습니다. 아래 통역을 첨삭해 주세요.\n\n[원문('+LN[s.lang]+')]\n'+s.src+'\n\n[학습자 통역('+LN[tgt]+')]\n'+(text&&text.trim()?text.trim():'(없음)')+'\n\n[참고 모범 통역]\n'+s.ref+
+  '\n\n한국어로, 아래 항목을 짧게 답해 주세요.\n1. 의미 전달: 빠뜨린 정보와 틀린 의미\n2. 문법·어휘 오류: 틀린 부분 → 올바른 표현과 이유 (일본어는 읽는 법도)\n3. 더 자연스러운 표현 (비즈니스 톤)\n4. 경어·뉘앙스 평가\n5. 한 줄 총평과 다음에 연습할 점\n학습자 통역이 모범 통역과 달라도 의미와 톤이 맞으면 문제없다고 평가해 주세요.';
+}
+const str=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
+function normItem(o){
+  if(!o||typeof o!=='object')return null;
+  const lang=o.lang==='ja'||o.lang==='ko'?o.lang:null;
+  const src=str(o.src,200),ref=str(o.ref,300);
+  if(!lang||!src||!ref)return null;
+  const key=(Array.isArray(o.key)?o.key:[]).slice(0,5).map(k=>Array.isArray(k)?[str(k[0],60),str(k[1],200)]:null).filter(k=>k&&k[0]);
+  const must=(Array.isArray(o.must)?o.must:[]).slice(0,6).map(m=>(Array.isArray(m)&&Array.isArray(m[1]))?[str(m[0],40),m[1].slice(0,6).map(x=>str(x,40)).filter(Boolean)]:null).filter(m=>m&&m[0]&&m[1].length);
+  const gram=(Array.isArray(o.gram)?o.gram:[]).slice(0,4).map(g=>Array.isArray(g)?[str(g[0],60),str(g[1],300)]:null).filter(g=>g&&g[0]&&g[1]);
+  return{id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),lang:lang,src:src,ref:ref,key:key,gram:gram,topic:TOPICS.includes(o.topic)?o.topic:'',nuance:str(o.nuance,400),yomi:str(o.yomi,200),must:must};
+}
+function parseSentences(text){
+  const t=String(text||'');
+  const a=t.indexOf('['),b=t.lastIndexOf(']');
+  if(a<0||b<=a)throw new Error('대괄호 [ ] 로 된 JSON을 찾지 못했어요. AI의 답을 처음부터 끝까지 통째로 붙여넣었는지 확인하세요.');
+  let arr;try{arr=JSON.parse(t.slice(a,b+1));}catch(e){throw new Error('JSON 형식이 올바르지 않아요. AI에게 “JSON 배열만 다시 출력해 줘”라고 요청해 보세요.');}
+  if(!Array.isArray(arr))throw new Error('JSON 배열이 아니에요.');
+  return arr.map(normItem).filter(Boolean);
+}
+function addCustom(list){
+  const have=new Set(all().map(s=>s.src));const added=[];
+  list.forEach(s=>{if(have.has(s.src))return;have.add(s.src);S.custom.push(s);added.push(s);});
+  save();return added;
+}
+function addToToday(ids){
+  const day=ensureToday(),t=todayStr();let n=0;
+  ids.forEach(id=>{
+    if(!byId(id)||day.newIds.includes(id)||day.reviewIds.includes(id))return;
+    day.newIds.push(id);
+    const p=S.progress[id]=S.progress[id]||{done:[],attempts:[],memo:''};
+    p.introDay=p.introDay||t;n++;
+  });
+  save();return n;
+}
+function removeCustom(id){
+  S.custom=S.custom.filter(s=>s.id!==id);
+  delete S.progress[id];
+  Object.keys(S.days).forEach(d=>{const x=S.days[d];['reviewIds','newIds','doneIds'].forEach(k=>{x[k]=(x[k]||[]).filter(i=>i!==id);});});
+  save();
+}
+async function viaSample(prompt){
+  if(!(window.claude&&window.claude.use))return null;
+  const sm=await window.claude.use('sample');
+  if(!sm)return null;
+  const r=await sm(prompt,{cache:false});
+  return r&&r.text;
+}
+async function viaEndpoint(prompt,extra){
+  const url=S.settings.endpoint;if(!url)return null;
+  const headers={'Content-Type':'application/json'};
+  if(S.settings.token)headers.Authorization='Bearer '+S.settings.token;
+  let r;
+  try{r=await fetch(url,{method:'POST',headers:headers,body:JSON.stringify(Object.assign({prompt:prompt},extra||{}))});}
+  catch(e){throw new Error('AI 서버에 연결하지 못했어요. 서버 주소와 허용 도메인(ALLOWED_ORIGIN) 설정을 확인하세요.');}
+  const t=await r.text();
+  if(!r.ok){
+    if(r.status===401)throw new Error('서버 비밀번호가 맞지 않아요. 설정에서 다시 확인하세요.');
+    if(r.status===403)throw new Error('이 사이트 주소가 서버의 허용 도메인에 없어요 (ALLOWED_ORIGIN).');
+    throw new Error('AI 서버 오류 ('+r.status+') '+t.slice(0,140));
+  }
+  return t;
+}
+async function viaOpenAI(prompt){
+  const k=S.settings.oaKey,m=S.settings.oaModel;
+  if(!k||!m)return null;
+  let r;
+  try{r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:m,messages:[{role:'user',content:prompt}]})});}
+  catch(e){throw new Error('OpenAI에 연결하지 못했어요. 인터넷 연결을 확인하세요.');}
+  const d=await r.json().catch(()=>null);
+  if(!r.ok){
+    const msg=d&&d.error&&d.error.message?String(d.error.message).slice(0,140):'';
+    if(r.status===401)throw new Error('API 키가 맞지 않아요. 설정에서 키를 다시 확인하세요.');
+    if(r.status===429)throw new Error('사용 한도나 크레딧이 부족해요. OpenAI 결제(Billing) 상태를 확인하세요.');
+    if(r.status===404||r.status===400)throw new Error('모델 이름을 확인하세요. '+msg);
+    throw new Error('OpenAI 오류 ('+r.status+') '+msg);
+  }
+  const c=d&&d.choices&&d.choices[0]&&d.choices[0].message;
+  return (c&&c.content)||'';
+}
+async function askAI(prompt,extra){
+  let t=await viaSample(prompt);
+  if(t==null)t=await viaEndpoint(prompt,extra);
+  if(t==null)t=await viaOpenAI(prompt);
+  return t;
+}
+function aiReady(cb){
+  if(S.settings.endpoint||(S.settings.oaKey&&S.settings.oaModel)){cb();return;}
+  if(window.claude&&window.claude.use){try{Promise.resolve(window.claude.use('sample')).then(sm=>{if(sm)cb();}).catch(()=>{});}catch(e){}}
+}
+function gramList(s){
+  return h('div',{class:'gram'},(s.gram||[]).map(g=>h('div',null,h('b',{text:g[0]}),h('p',{text:g[1]}))));
+}
+function step(n,title){
+  const body=Array.prototype.slice.call(arguments,2);
+  return h('div',{class:'step'},h('span',{class:'num',text:String(n)}),h('div',{class:'stack',style:'gap:10px;flex:1;min-width:0'},h('b',{text:title}),body));
+}
+function viewAdd(){
+  const root=h('div',{class:'stack'});
+  root.append(h('div',{class:'top'},h('div',null,h('h1',{text:'문장 추가'}),h('div',{class:'sub',text:'내가 연습할 문장을 넣는 곳'}))));
+  root.append(h('div',{class:'card stack',style:'gap:8px'},
+    h('h2',{text:'넣는 방법은 두 가지예요'}),
+    h('p',{text:'방법 1. AI에게 만들어 달라고 하기. 모범 통역과 해설까지 자동으로 채워져요.'}),
+    h('p',{text:'방법 2. 내가 직접 쓰기. 원문과 모범 통역만 있으면 돼요.'}),
+    h('p',{class:'help',text:'추가한 문장은 다음 연습부터 먼저 나옵니다. 오늘 바로 하고 싶으면 추가한 뒤 “오늘 연습에 바로 넣기”를 누르세요.'})));
+
+  /* 방법 1 */
+  const topic=h('select',{class:'field',id:'g-topic'},
+    h('option',{value:'__mix',text:'여러 주제 골고루 섞기'}),
+    TOPIC_GROUPS.map(g=>h('optgroup',{label:g[0]},g[1].map(t=>h('option',{value:t,text:t})))),
+    h('option',{value:'__custom',text:'직접 입력…'}));
+  const topicIn=h('input',{class:'field',id:'g-topic-in',type:'text',maxlength:'40',placeholder:'예: 주주총회, 공장 견학',hidden:true});
+  const topicText=()=>topic.value==='__mix'?'다양한 업무 상황(회의, 영업, 인사, 운영, 법무, IT 등)을 골고루 섞어서':(topic.value==='__custom'?(topicIn.value.trim().slice(0,40)||'일반 업무'):topic.value);
+  const topicTag=()=>TOPICS.includes(topic.value)?topic.value:'';
+  const level=h('select',{class:'field',id:'g-level'},[['1','짧게 (15~25자)'],['2','보통 (25~45자)'],['3','길게 (45~80자)']].map(o=>h('option',{value:o[0],text:o[1],selected:o[0]==='2'})));
+  const count=h('select',{class:'field',id:'g-count'},[['4','4개'],['8','8개'],['12','12개']].map(o=>h('option',{value:o[0],text:o[1]})));
+  const mine=h('textarea',{class:'field',id:'g-mine',style:'min-height:84px',placeholder:'(선택) 연습하고 싶은 문장을 한 줄에 하나씩 적으세요. 비워 두면 AI가 위 주제로 새로 만들어요.'});
+  const promptBox=h('textarea',{class:'field',id:'g-prompt',readonly:true,style:'min-height:150px;font-size:13px'});
+  const pasteBox=h('textarea',{class:'field',id:'g-paste',style:'min-height:110px',placeholder:'AI가 보내 준 답(대괄호 [ 로 시작하는 긴 글)을 전부 붙여넣으세요'});
+  const msg=h('p',{class:'help'});
+  const result=h('div',{class:'stack',style:'gap:8px'});
+  const listBox=h('div');
+  let armed=null;
+  const mk=()=>{
+    const lines=mine.value.split('\n').map(x=>x.trim()).filter(Boolean).slice(0,12);
+    const ex=S.custom.concat(BANK).slice(-8).map(s=>s.src);
+    return buildPrompt(topicText(),level.value,count.value,ex,lines);
+  };
+  const refresh=()=>{promptBox.value=mk();};
+  [topic,level,count].forEach(x=>x.addEventListener('change',()=>{topicIn.hidden=topic.value!=='__custom';refresh();}));
+  topicIn.addEventListener('input',refresh);
+  mine.addEventListener('input',refresh);refresh();
+
+  function renderList(){
+    listBox.replaceChildren();
+    if(!S.custom.length){listBox.append(h('p',{class:'help',text:'아직 추가한 문장이 없어요.'}));return;}
+    S.custom.slice().reverse().forEach(s=>{
+      const started=S.progress[s.id]&&S.progress[s.id].introDay;
+      listBox.append(h('div',{class:'row'},
+        h('div',{class:'row-main'},h('div',{class:'meta'},chip(s.lang),h('span',{class:'tag',text:started?'연습 시작함':'대기 중'})),h('div',{class:'sent sm',lang:s.lang,text:s.src})),
+        h('button',{class:'btn ghost sm',type:'button',text:armed===s.id?'정말 삭제':'삭제',onclick:()=>{
+          if(armed!==s.id){armed=s.id;renderList();setTimeout(()=>{if(armed===s.id){armed=null;renderList();}},4000);return;}
+          armed=null;removeCustom(s.id);renderList();toast('삭제했어요');}})));
+    });
+  }
+  function showAdded(added,total){
+    result.replaceChildren();
+    if(!added.length){msg.className='help warn';msg.textContent=total?'이미 있는 문장이라 새로 추가된 게 없어요.':'가져올 문장을 찾지 못했어요.';return;}
+    msg.className='help';
+    msg.textContent=total+'개 중 '+added.length+'개를 추가했어요.'+(total>added.length?' (중복 '+(total-added.length)+'개 제외)':'');
+    result.append(
+      h('button',{class:'btn block',type:'button',text:'오늘 연습에 바로 넣기',onclick:()=>{const n=addToToday(added.map(s=>s.id));toast(n+'개를 오늘 연습에 넣었어요');go('today');}}),
+      h('p',{class:'help',text:'넣지 않아도 다음 연습부터 자동으로 나와요.'}));
+    renderList();
+  }
+  const genBtn=h('button',{class:'btn block',type:'button',hidden:true,text:'AI가 바로 만들어 주기'});
+  genBtn.addEventListener('click',async()=>{
+    genBtn.disabled=true;msg.className='help';msg.textContent='문장을 만드는 중이에요…';result.replaceChildren();
+    try{
+      const t=await askAI(mk(),{topic:topicText(),level:Number(level.value),count:Number(count.value)});
+      if(t==null)throw new Error('이 환경에서는 AI를 바로 쓸 수 없어요. 아래 복사 방법을 이용하세요.');
+      const list=parseSentences(t);list.forEach(x=>{if(!x.topic)x.topic=topicTag();});showAdded(addCustom(list),list.length);
+    }catch(e){msg.className='help warn';msg.textContent=(e&&e.code==='not_granted')?'AI 사용 권한이 허용되지 않았어요.':((e&&e.message)||'생성에 실패했어요.');}
+    finally{genBtn.disabled=false;}
+  });
+  aiReady(()=>{genBtn.hidden=false;});
+
+  root.append(h('div',{class:'card stack',style:'gap:18px'},
+    h('h2',{text:'방법 1. AI에게 만들어 달라고 하기'}),
+    step(1,'주제와 길이를 고르세요',
+      h('div',{class:'grid2'},h('label',{class:'lb',for:'g-topic'},'주제',topic),h('label',{class:'lb',for:'g-level'},'길이',level)),
+      topicIn,
+      h('label',{class:'lb',for:'g-count'},'개수',count),
+      h('label',{class:'lb',for:'g-mine'},'내 문장 (선택)',mine)),
+    step(2,'AI에게 보낼 글을 복사하세요',
+      genBtn,
+      h('button',{class:'btn ghost',type:'button',text:'AI에게 보낼 글 복사',onclick:()=>copyText(promptBox.value,promptBox)}),
+      h('p',{class:'help',text:'복사한 뒤 ChatGPT나 Claude 같은 AI 앱을 열어 붙여넣고 보내세요. 답이 오기까지 잠시 걸려요.'}),
+      h('details',null,h('summary',{class:'help',style:'cursor:pointer',text:'복사될 내용 보기'}),h('div',{style:'margin-top:8px'},promptBox))),
+    step(3,'AI의 답을 붙여넣으세요',
+      pasteBox,
+      h('p',{class:'help',text:'답 전체를 복사하세요. [ 로 시작해서 ] 로 끝나는 긴 글이에요. 앞뒤에 설명이 붙어 있어도 괜찮아요.'}),
+      h('button',{class:'btn',type:'button',text:'가져오기',onclick:()=>{
+        try{const list=parseSentences(pasteBox.value);list.forEach(x=>{if(!x.topic)x.topic=topicTag();});showAdded(addCustom(list),list.length);if(list.length)pasteBox.value='';}
+        catch(e){result.replaceChildren();msg.className='help warn';msg.textContent=e.message;}}}),
+      msg,result)));
+
+  /* 방법 2 */
+  const mLang=h('select',{class:'field',id:'m-lang'},h('option',{value:'ja',text:'일본어 원문 → 한국어로 통역'}),h('option',{value:'ko',text:'한국어 원문 → 일본어로 통역'}));
+  const mSrc=h('textarea',{class:'field',id:'m-src',placeholder:'원문 (연습할 때 소리로 들려줄 문장)'});
+  const mRef=h('textarea',{class:'field',id:'m-ref',placeholder:'모범 통역 (반대 언어)'});
+  const mNu=h('textarea',{class:'field',id:'m-nu',placeholder:'뉘앙스·문법 메모 (선택)',style:'min-height:64px'});
+  const mNow=h('input',{type:'checkbox',id:'m-now',checked:true});
+  root.append(h('div',{class:'card stack',style:'gap:10px'},
+    h('h2',{text:'방법 2. 내가 직접 쓰기'}),
+    mLang,mSrc,mRef,mNu,
+    h('label',{class:'chk',for:'m-now'},mNow,h('span',{text:'저장하고 오늘 연습에 바로 넣기'})),
+    h('button',{class:'btn',type:'button',text:'문장 저장',onclick:()=>{
+      const it=normItem({lang:mLang.value,src:mSrc.value,ref:mRef.value,nuance:mNu.value});
+      if(!it){toast('원문과 모범 통역을 모두 입력하세요.');return;}
+      const added=addCustom([it]);
+      if(!added.length){toast('이미 있는 문장이에요.');return;}
+      mSrc.value='';mRef.value='';mNu.value='';
+      if(mNow.checked){addToToday([it.id]);toast('저장하고 오늘 연습에 넣었어요');go('today');}
+      else{toast('저장했어요. 다음 연습부터 나와요.');renderList();}}})));
+
+  root.append(h('div',{class:'card stack',style:'gap:6px'},h('h2',{text:'내가 추가한 문장'}),listBox));
+  renderList();
+  return root;
+}
+
+/* ---------- 설정 ---------- */
+let confirmReset=false;
+function viewSettings(){
+  const st=S.settings;
+  const root=h('div',{class:'stack'});
+  root.append(h('div',{class:'top'},h('div',null,h('h1',{text:'설정'}),h('div',{class:'sub',text:'연습 방식과 데이터'}))));
+  root.append(h('p',{class:'help',text:'앱 버전 v11 · 예문 '+BANK.length+'개 · 첫 문장 무작위 · 새 문장 다시 뽑기'}));
+  const sel=(id,label,val,opts,onch)=>{const s=h('select',{class:'field',id:id,onchange:()=>onch(s.value)},opts.map(o=>h('option',{value:String(o[0]),text:o[1],selected:String(o[0])===String(val)})));return h('label',{class:'lb',for:id},label,s);};
+  root.append(h('div',{class:'card stack',style:'gap:14px'},
+    h('h2',{text:'통역 연습'}),
+    sel('s-limit','제한 시간',st.limit,[[10,'10초'],[15,'15초'],[20,'20초'],[30,'30초'],[45,'45초']],v=>{st.limit=Number(v);save();}),
+    sel('s-basis','제한 시간 기준',st.basis,[['start','음성이 끝난 뒤 말하기를 시작할 때까지'],['finish','음성이 끝난 뒤 통역을 마칠 때까지 (시간이 되면 자동 정지)']],v=>{st.basis=v;save();}),
+    sel('s-perday','하루 새 문장',st.perDay,[[3,'3문장'],[4,'4문장'],[5,'5문장']],v=>{st.perDay=Number(v);save();}),
+    sel('s-rate','재생 속도',st.rate,[[0.8,'느리게 0.8'],[0.9,'0.9'],[1,'보통 1.0'],[1.1,'빠르게 1.1'],[1.2,'1.2']],v=>{st.rate=Number(v);save();}),
+    sel('s-slow','천천히 듣기 속도',st.slow,[[0.5,'0.5'],[0.6,'0.6'],[0.7,'0.7'],[0.8,'0.8']],v=>{st.slow=Number(v);save();})));
+  const tsel=new Set((st.topics||[]).filter(x=>TOPICS.includes(x)));
+  const cnt=t=>all().filter(x=>x.topic===t&&!(S.progress[x.id]&&S.progress[x.id].introDay)).length;
+  const tsum=h('p',{class:'help'});
+  const tsumUpd=()=>{tsum.textContent=tsel.size?('선택: '+tsel.size+'개 주제 · 내일부터 적용'):'선택 없음 = 모든 주제에서 골고루 나옵니다.';};
+  const tbox=h('div',{class:'stack',style:'gap:10px'},TOPIC_GROUPS.map(g=>h('div',null,h('b',{class:'sub',text:g[0]}),
+    h('div',{class:'chips'},g[1].map(t=>{
+      const b=h('button',{type:'button',class:'tchip'+(tsel.has(t)?' on':''),'aria-pressed':tsel.has(t)?'true':'false',text:t+' '+cnt(t),onclick:()=>{
+        if(tsel.has(t))tsel.delete(t);else tsel.add(t);
+        b.classList.toggle('on',tsel.has(t));b.setAttribute('aria-pressed',tsel.has(t)?'true':'false');
+        st.topics=Array.from(tsel);save();tsumUpd();}});
+      return b;})))));
+  tsumUpd();
+  root.append(h('div',{class:'card stack',style:'gap:10px'},
+    h('h2',{text:'연습할 주제'}),
+    h('p',{class:'help',text:'원하는 주제만 눌러 선택하세요. 숫자는 아직 안 나온 문장 수입니다. 선택한 주제 문장이 떨어지면 다른 주제가 섞여요.'}),
+    tbox,tsum,
+    h('button',{class:'btn ghost sm',type:'button',text:'모두 해제 (전체 주제)',onclick:()=>{tsel.clear();st.topics=[];save();tbox.querySelectorAll('.tchip').forEach(b=>{b.classList.remove('on');b.setAttribute('aria-pressed','false');});tsumUpd();}})));
+  const chk=(id,label,key,note)=>{const c=h('input',{type:'checkbox',id:id,checked:!!st[key],onchange:()=>{st[key]=c.checked;save();}});return h('div',{class:'stack',style:'gap:2px'},h('label',{class:'chk',for:id},c,h('span',{text:label})),h('p',{class:'help',text:note}));};
+  root.append(h('div',{class:'card stack',style:'gap:14px'},
+    h('h2',{text:'마이크'}),
+    chk('s-stt','음성 인식으로 글자 만들기','stt','말한 내용을 글자로 바꿉니다. 틀린 부분은 직접 고칠 수 있어요.'),
+    chk('s-rec','내 목소리 녹음해서 다시 듣기','rec','아이폰·아이패드에서 인식이 안 되면 이 항목을 꺼 보세요. 녹음은 저장되지 않습니다.')));
+  const epIn=h('input',{class:'field',id:'s-ep',type:'url',placeholder:'https://내서버.workers.dev',value:st.endpoint||'',onchange:()=>{st.endpoint=epIn.value.trim();save();}});
+  const tkIn=h('input',{class:'field',id:'s-tk',type:'password',autocomplete:'off',placeholder:'서버 비밀번호',value:st.token||'',onchange:()=>{st.token=tkIn.value.trim();save();}});
+  const keyIn=h('input',{class:'field',id:'s-oakey',type:'password',autocomplete:'off',placeholder:'sk- 로 시작하는 API 키',value:st.oaKey||'',onchange:()=>{st.oaKey=keyIn.value.trim();save();}});
+  const modIn=h('input',{class:'field',id:'s-oamodel',type:'text',autocomplete:'off',placeholder:'모델 이름 (OpenAI 문서에서 확인)',value:st.oaModel||'',onchange:()=>{st.oaModel=modIn.value.trim();save();}});
+  const oaOut=h('p',{class:'help'});
+  root.append(h('div',{class:'card stack',style:'gap:10px'},
+    h('h2',{text:'AI 연결 — 가장 간단한 방법'}),
+    h('p',{class:'help',text:'OpenAI API 키와 모델 이름만 넣으면 AI 첨삭과 문장 만들기 버튼이 바로 켜져요. 키는 이 기기의 브라우저에만 저장되고 백업에는 들어가지 않아요. 내 기기 전용으로 쓰고, OpenAI에서 월 사용 한도를 꼭 걸어 두세요.'}),
+    h('label',{class:'lb',for:'s-oakey'},'API 키',keyIn),
+    h('label',{class:'lb',for:'s-oamodel'},'모델 이름',modIn),
+    h('button',{class:'btn ghost sm',type:'button',text:'테스트 (아주 적은 비용)',onclick:async()=>{
+      st.oaKey=keyIn.value.trim();st.oaModel=modIn.value.trim();save();
+      oaOut.className='help';oaOut.textContent='확인하는 중…';
+      try{const t=await viaOpenAI('Reply with the single word: ok');
+        if(t==null){oaOut.className='help warn';oaOut.textContent='키와 모델 이름을 모두 입력하세요.';}
+        else oaOut.textContent='연결됐어요. 응답: '+String(t).trim().slice(0,30);
+      }catch(e){oaOut.className='help warn';oaOut.textContent=(e&&e.message)||'연결에 실패했어요.';}
+    }}),
+    oaOut));
+  const testOut=h('p',{class:'help'});
+  root.append(h('details',{class:'card stack',style:'gap:10px'},
+    h('summary',{style:'cursor:pointer;font-weight:700',text:'고급: 중계 서버로 연결 (선택)'}),
+    h('p',{class:'help',text:'GPT 같은 AI를 앱에서 바로 쓰려면 중계 서버를 만들어 주소와 비밀번호를 넣으세요. 연결되면 AI 첨삭과 문장 만들기에 “바로” 버튼이 나타납니다. AI 키는 서버에만 두고 여기에 넣지 마세요.'}),
+    h('label',{class:'lb',for:'s-ep'},'서버 주소',epIn),
+    h('label',{class:'lb',for:'s-tk'},'서버 비밀번호',tkIn),
+    h('button',{class:'btn ghost sm',type:'button',text:'연결 테스트 (비용 없음)',onclick:async()=>{
+      st.endpoint=epIn.value.trim();st.token=tkIn.value.trim();save();
+      testOut.className='help';testOut.textContent='확인하는 중…';
+      try{
+        const t=await viaEndpoint('ping',{kind:'ping'});
+        if(t==null){testOut.className='help warn';testOut.textContent='서버 주소를 먼저 입력하세요.';}
+        else if(t.trim()==='ok')testOut.textContent='연결됐어요. 이제 AI 첨삭과 문장 만들기를 바로 쓸 수 있어요.';
+        else{testOut.className='help warn';testOut.textContent='서버가 예상과 다르게 답했어요: '+t.slice(0,80);}
+      }catch(e){testOut.className='help warn';testOut.textContent=(e&&e.message)||'연결에 실패했어요.';}
+    }}),
+    testOut));
+
+  const ttsOk='speechSynthesis' in window;
+  const d=(label,ok,note)=>[h('span',{text:label}),h('b',{class:ok?'ok':'no',text:ok?'가능':(note||'불가')})];
+  root.append(h('div',{class:'card stack',style:'gap:10px'},
+    h('h2',{text:'이 기기 점검'}),
+    h('div',{class:'diag'},
+      d('음성 재생',ttsOk),d('일본어 음성',ttsOk&&!!voiceFor('ja'),'없음'),d('한국어 음성',ttsOk&&!!voiceFor('ko'),'없음'),
+      d('음성 인식',!!SRC),d('녹음',!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&typeof MediaRecorder!=='undefined')),d('기록 저장',storageOk,'막힘')),
+    h('p',{class:'help',text:'마이크 항목이 “가능”이어도 처음 사용할 때 브라우저가 권한을 물어볼 수 있어요. 일본어 음성이 없으면 기기 설정의 음성 추가에서 내려받으세요.'})));
+
+  const box=h('textarea',{class:'field',id:'s-backup',style:'min-height:110px;font-size:12px',placeholder:'백업 내용이 여기에 나타나요'});
+  const exp=()=>{const c=JSON.parse(JSON.stringify(S));c.settings.endpoint='';c.settings.token='';c.settings.oaKey='';c.settings.oaModel='';return JSON.stringify(c);};
+  root.append(h('div',{class:'card stack',style:'gap:10px'},
+    h('h2',{text:'백업과 복원'}),
+    h('p',{class:'help',text:storageOk?'기록은 이 브라우저에 저장돼요. 기기를 바꿀 때 백업을 복사해 두세요.':'이 환경은 저장이 막혀 있어서 창을 닫으면 기록이 사라져요. 백업을 복사해 두세요.'}),
+    box,
+    h('div',{class:'foot'},
+      h('button',{class:'btn ghost sm',type:'button',text:'백업 만들기·복사',onclick:()=>{box.value=exp();copyText(box.value,box);}}),
+      h('button',{class:'btn sm',type:'button',text:'붙여넣은 백업 복원',onclick:()=>{
+        try{
+          const o=JSON.parse(box.value);
+          if(!o||typeof o!=='object'||!o.progress||!o.days)throw new Error('x');
+          const ep=S.settings.endpoint,tk=S.settings.token,ok=S.settings.oaKey,om=S.settings.oaModel;
+          S=Object.assign(DEF(),o);S.settings=Object.assign(DEF().settings,o.settings||{},{endpoint:ep,token:tk,oaKey:ok,oaModel:om});
+          S.custom=(Array.isArray(o.custom)?o.custom:[]).map(c=>{const n=normItem(c);if(n&&c&&typeof c.id==='string'&&/^[\w-]{1,24}$/.test(c.id))n.id=c.id;return n;}).filter(Boolean);
+          if(typeof S.progress!=='object'||S.progress===null)S.progress={};
+          if(typeof S.days!=='object'||S.days===null)S.days={};
+          Object.keys(S.days).forEach(k=>{const d=S.days[k]||{};S.days[k]={reviewIds:Array.isArray(d.reviewIds)?d.reviewIds:[],newIds:Array.isArray(d.newIds)?d.newIds:[],doneIds:Array.isArray(d.doneIds)?d.doneIds:[]};});
+          Object.keys(S.progress).forEach(k=>{const p=S.progress[k]||{};S.progress[k]=Object.assign({done:[],attempts:[],memo:''},p);if(!Array.isArray(S.progress[k].done))S.progress[k].done=[];if(!Array.isArray(S.progress[k].attempts))S.progress[k].attempts=[];if(!Array.isArray(S.progress[k].fb))delete S.progress[k].fb;});
+          save();toast('복원했어요');render();
+        }catch(e){toast('백업 형식이 올바르지 않아요.');}}}))));
+  const rb=h('button',{class:'btn ghost sm',type:'button',text:confirmReset?'정말 모두 지울까요? 한 번 더 누르세요':'기록 모두 지우기',onclick:()=>{
+    if(!confirmReset){confirmReset=true;render();setTimeout(()=>{confirmReset=false;},5000);return;}
+    const ep=S.settings.endpoint,tk=S.settings.token,ok=S.settings.oaKey,om=S.settings.oaModel;S=DEF();S.settings.endpoint=ep;S.settings.token=tk;S.settings.oaKey=ok;S.settings.oaModel=om;save();confirmReset=false;toast('모두 지웠어요');render();}});
+  root.append(h('div',null,rb));
+  return root;
+}
+
+render();
+})();
+</script>
+</body></html>
