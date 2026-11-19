@@ -1514,13 +1514,10 @@ function buildCompare(){
     h('div',{class:'ctrl'},fbBtn,h('button',{class:'btn ghost sm',type:'button',text:'첨삭 요청 글 복사',onclick:()=>copyText(fbPrompt)})),
     fbMsg,fbOut);
 
-  const memo=h('textarea',{class:'field',id:'pron-memo',placeholder:'발음·억양에서 헷갈린 부분을 적어 두세요',oninput:()=>{const p=S.progress[s.id]=S.progress[s.id]||{done:[],attempts:[],memo:''};p.memo=memo.value;save();}});
-  memo.value=pr.memo||'';
   const pron=h('div',{class:'card stack',style:'gap:10px'},
-    h('h2',{text:'발음 확인 메모'}),
-    s.yomi?h('p',{class:'sub',lang:'ja',text:'읽기 힌트: '+s.yomi}):null,
-    h('p',{class:'help',text:'음성 인식이 맞게 나왔다고 해서 발음이 정확하다는 뜻은 아니에요. 모범 음성과 내 녹음을 번갈아 들어 보고 직접 메모하세요.'}),
-    memo);
+    h('h2',{text:'읽기 힌트'}),
+    s.yomi?h('p',{class:'sub',lang:'ja',text:s.yomi}):h('p',{class:'help',text:'이 문장은 읽기 힌트가 없어요.'}),
+    h('p',{class:'help',text:'음성 인식이 맞게 나왔다고 해서 발음이 정확하다는 뜻은 아니에요. 모범 음성과 내 녹음을 번갈아 들어 보세요.'}));
 
   const againChk=h('input',{type:'checkbox',id:'again',onchange:()=>{P.again=againChk.checked;}});
   P.again=P.again||(hits.total>0&&hits.ok/hits.total<0.6);
@@ -1628,8 +1625,6 @@ function viewLibrary(){
 }
 function libItem(s){
   const p=S.progress[s.id],tgt=other(s.lang);
-  const memo=h('textarea',{class:'field',id:'m-'+s.id,placeholder:'발음 확인 메모',oninput:()=>{p.memo=memo.value;save();}});
-  memo.value=p.memo||'';
   const atts=(p.attempts||[]).slice(-3).reverse();
   return h('details',{class:'lib'},
     h('summary',null,
@@ -1643,7 +1638,6 @@ function libItem(s){
       s.nuance?h('p',{class:'sub',text:s.nuance}):null,
       (s.gram&&s.gram.length)?gramList(s):null,
       s.yomi?h('p',{class:'sub',lang:'ja',text:'읽기: '+s.yomi}):null,
-      memo,
       (Array.isArray(p.fb)&&p.fb.length)?h('div',{class:'stack',style:'gap:8px'},h('h3',{text:'AI 첨삭 기록 ('+p.fb.length+')'}),p.fb.slice(-5).reverse().map(f=>h('details',{class:'fbrec'},h('summary',{class:'help',style:'cursor:pointer',text:f.d+' · '+(f.mine||'(통역 없음)').slice(0,40)}),h('div',{class:'ai-out',text:f.ai})))):null,
       atts.length?h('div',{class:'att'},atts.map(a=>h('div',null,a.d+' · '+(a.resp==null?'-':a.resp+'초')+' · 정보 '+a.hits+'/'+a.total+(a.text?' · '+a.text:'')))):null,
       h('button',{class:'btn ghost sm',type:'button',text:'이 문장 다시 연습',onclick:()=>{
@@ -1884,7 +1878,7 @@ function viewSettings(){
   const st=S.settings;
   const root=h('div',{class:'stack'});
   root.append(h('div',{class:'top'},h('div',null,h('h1',{text:'설정'}),h('div',{class:'sub',text:'연습 방식과 데이터'}))));
-  root.append(h('p',{class:'help',text:'앱 버전 v10 · 예문 '+BANK.length+'개 · 첫 문장 무작위 · 새 문장 다시 뽑기'}));
+  root.append(h('p',{class:'help',text:'앱 버전 v11 · 예문 '+BANK.length+'개 · 첫 문장 무작위 · 새 문장 다시 뽑기'}));
   const sel=(id,label,val,opts,onch)=>{const s=h('select',{class:'field',id:id,onchange:()=>onch(s.value)},opts.map(o=>h('option',{value:String(o[0]),text:o[1],selected:String(o[0])===String(val)})));return h('label',{class:'lb',for:id},label,s);};
   root.append(h('div',{class:'card stack',style:'gap:14px'},
     h('h2',{text:'통역 연습'}),
